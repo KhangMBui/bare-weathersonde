@@ -1,7 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-// import Ionicons from 'react-native-ionicons';
-import Ionicons from '@react-native-vector-icons/ionicons';
-// import {router} from 'expo-router';
+import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -19,35 +16,55 @@ export default function Footer() {
         style={[styles.iconContainer]}
         onPress={() => handlePress('Home')}
       >
-        <Ionicons name="map-outline" size={28} color="white" />
+        {/* <MaterialIcons name="map" size={28} color="white" /> */}
+        <Image
+          source={require('./../assets/images/icon-map-filled.png')}
+          style={styles.logo}
+        />
         <Text style={styles.iconText}>Map</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer]}
         onPress={() => handlePress('Data')}
       >
-        <Ionicons name="bar-chart-outline" size={28} color="white" />
+        {/* <MaterialIcons name="bar-chart" size={28} color="white" /> */}
+        <Image
+          source={require('./../assets/images/icon-data-filled.png')}
+          style={styles.logo}
+        />
         <Text style={styles.iconText}>Data</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer]}
         onPress={() => handlePress('Analytics')}
       >
-        <Ionicons name="analytics-outline" size={28} color="white" />
+        {/* <MaterialIcons name="analytics" size={28} color="white" /> */}
+        <Image
+          source={require('./../assets/images/icon-analytics-filled.png')}
+          style={styles.logo}
+        />
         <Text style={styles.iconText}>Analytics</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer]}
         onPress={() => handlePress('UsbSerial')}
       >
-        <Ionicons name="partly-sunny-outline" size={28} color="white" />
+        {/* <MaterialIcons name="sunny-snowing" size={28} color="white" /> */}
+        <Image
+          source={require('./../assets/images/icon-weather-filled.png')}
+          style={styles.logo}
+        />
         <Text style={styles.iconText}>Weather</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer]}
         onPress={() => handlePress('Settings')}
       >
-        <Ionicons name="settings-sharp" size={28} color="white" />
+        {/* <MaterialIcons name="settings" size={28} color="white" /> */}
+        <Image
+          source={require('./../assets/images/icon-settings-filled.png')}
+          style={styles.logo}
+        />
         <Text style={styles.iconText}>Setting</Text>
       </TouchableOpacity>
     </View>
@@ -80,5 +97,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B0000', // Darker red
     borderRadius: 8,
     padding: 5,
+  },
+  logo: {
+    width: 25,
+    height: 25,
   },
 });

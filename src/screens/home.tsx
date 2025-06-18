@@ -11,8 +11,6 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import axios from 'axios';
-import Ionicons from '@react-native-vector-icons/ionicons';
-// import Ionicons from 'react-native-ionicons';
 import { useUnitConversion } from '../hooks/useUnitConversion';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -147,9 +145,12 @@ export default function HomeScreen() {
 
         {/* Button to center map on drone */}
         <TouchableOpacity style={styles.button} onPress={centerMapOnDrone}>
-          {/* <Text style={styles.buttonText}>Current Location (Drone)</Text> */}
           <View style={styles.innerCircle}>
-            <Ionicons name="location-outline" size={28} color="white" />
+            <Image
+              source={require('./../assets/images/icon-location.png')}
+              style={styles.locationLogo}
+            />
+            {/* <MaterialIcons name="location-pin" color="white" size={25} /> */}
           </View>
         </TouchableOpacity>
 
@@ -230,6 +231,10 @@ const styles = StyleSheet.create({
   droneLogo: {
     height: 40,
     width: 40,
+  },
+  locationLogo: {
+    height: 25,
+    width: 25,
   },
   // fakeUserDotOuter: {
   //   height: 24,

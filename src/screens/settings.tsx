@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Linking,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -13,8 +14,6 @@ import Header from '../components/header';
 import { useSettings } from '../contexts/SettingsContext';
 import { Alert } from 'react-native';
 import KnowledgeModal from '../components/knowledgeModal';
-import Ionicons from '@react-native-vector-icons/ionicons';
-// import Ionicons from 'react-native-ionicons';
 import AuthorsModal from '../components/authorsModal';
 
 export default function Settings() {
@@ -115,8 +114,11 @@ export default function Settings() {
             style={styles.applyButton}
             onPress={handleApplyChanges}
           >
-            <Ionicons name="checkmark-circle-outline" size={23} color="#fff" />
-            {/* <Ionicons name="cog-outline" size={25} color="#fff" /> */}
+            {/* <Icon name="checkmark-circle-outline" size={23} color="#fff" /> */}
+            <Image
+              source={require('./../assets/images/icon-tick-filled.png')}
+              style={styles.logo}
+            />
             <Text style={styles.applyButtonText}>Apply Changes</Text>
           </TouchableOpacity>
         </>
@@ -128,7 +130,11 @@ export default function Settings() {
             style={styles.applyButton}
             onPress={() => setKnowledgeModalVisible(true)}
           >
-            <Ionicons name="book-outline" size={23} color="#fff" />
+            {/* <MaterialIcons name="menu-book" size={23} color="#fff" /> */}
+            <Image
+              source={require('./../assets/images/icon-knowledge-filled.png')}
+              style={styles.logo}
+            />
             <Text style={styles.applyButtonText}>Open Knowledge Center</Text>
           </TouchableOpacity>
         </View>
@@ -139,7 +145,11 @@ export default function Settings() {
             style={styles.applyButton}
             onPress={() => setAuthorsModalVisible(true)}
           >
-            <Ionicons name="people-outline" size={23} color="#fff" />
+            {/* <MaterialIcons name="people-outline" size={23} color="#fff" /> */}
+            <Image
+              source={require('./../assets/images/icon-author-filled.png')}
+              style={styles.logo}
+            />
             <Text style={styles.applyButtonText}>Authors</Text>
           </TouchableOpacity>
         </View>
@@ -156,7 +166,11 @@ export default function Settings() {
               )
             }
           >
-            <Ionicons name="open-outline" size={23} color="#A60F2D" />
+            {/* <MaterialIcons name="open-in-new" size={23} color="#A60F2D" /> */}
+            <Image
+              source={require('./../assets/images/icon-open-filled.png')}
+              style={styles.logo}
+            />
             <Text style={styles.linkButtonText}>
               Visit AgWeatherNet Website
             </Text>
@@ -262,5 +276,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 8,
     textDecorationLine: 'underline',
+  },
+  logo: {
+    height: 25,
+    width: 25,
   },
 });
