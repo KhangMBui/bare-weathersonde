@@ -6,6 +6,7 @@ import {
   Linking,
   SafeAreaView,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -60,123 +61,125 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#A60F2D' }}>
       <Header />
-      <Text style={styles.settingsTitle}>Settings</Text>
-      <View style={styles.mainContainer}>
-        {/* Temperature Unit */}
-        <>
-          <Text style={styles.sectionHeader}>Units</Text>
-          <Text style={styles.label}>Temperature</Text>
-          <View style={{ zIndex: 3000 }}>
-            <DropDownPicker
-              open={tempOpen}
-              value={temperatureUnit}
-              items={tempUnits}
-              setOpen={open => {
-                if (open) {
-                  setTempOpen(open);
-                  setDistOpen(!open);
-                } else {
-                  setTempOpen(false); // Close dropdown if it's already open
-                }
-              }}
-              setValue={callback => {
-                setTempUnit(callback); // Update local state
-                setTempOpen(false); // Close dropdown immediately after selection
-              }}
-              style={styles.dropdown}
-              dropDownContainerStyle={styles.dropdownContainer}
-            />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <Text style={styles.settingsTitle}>Settings</Text>
+        <View style={styles.mainContainer}>
+          {/* Temperature Unit */}
+          <>
+            <Text style={styles.sectionHeader}>Units</Text>
+            <Text style={styles.label}>Temperature</Text>
+            <View style={{ zIndex: 3000 }}>
+              <DropDownPicker
+                open={tempOpen}
+                value={temperatureUnit}
+                items={tempUnits}
+                setOpen={open => {
+                  if (open) {
+                    setTempOpen(open);
+                    setDistOpen(!open);
+                  } else {
+                    setTempOpen(false); // Close dropdown if it's already open
+                  }
+                }}
+                setValue={callback => {
+                  setTempUnit(callback); // Update local state
+                  setTempOpen(false); // Close dropdown immediately after selection
+                }}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+              />
+            </View>
+            {/* Distance Unit */}
+            <Text style={styles.label}>Distance</Text>
+            <View style={{ zIndex: 2000 }}>
+              <DropDownPicker
+                open={distOpen}
+                value={distanceUnit}
+                items={distanceUnits}
+                setOpen={open => {
+                  if (open) {
+                    setDistOpen(open);
+                    setTempOpen(!open);
+                  } else {
+                    setDistOpen(false); // Close dropdown if it's already open
+                  }
+                }}
+                setValue={callback => {
+                  setDistUnit(callback); // Update local state
+                  setDistOpen(false); // Close dropdown immediately after selection
+                }}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={handleApplyChanges}
+            >
+              {/* <Icon name="checkmark-circle-outline" size={23} color="#fff" /> */}
+              <Image
+                source={require('./../assets/images/icon-tick-filled.png')}
+                style={styles.logo}
+              />
+              <Text style={styles.applyButtonText}>Apply Changes</Text>
+            </TouchableOpacity>
+          </>
+          {/* Separator */}
+          <View style={styles.separator} />
+          <View style={styles.knowledgeCenterContainer}>
+            <Text style={styles.sectionHeader}>Knowledge Center</Text>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => setKnowledgeModalVisible(true)}
+            >
+              {/* <MaterialIcons name="menu-book" size={23} color="#fff" /> */}
+              <Image
+                source={require('./../assets/images/icon-knowledge-filled.png')}
+                style={styles.logo}
+              />
+              <Text style={styles.applyButtonText}>Open Knowledge Center</Text>
+            </TouchableOpacity>
           </View>
-          {/* Distance Unit */}
-          <Text style={styles.label}>Distance</Text>
-          <View style={{ zIndex: 2000 }}>
-            <DropDownPicker
-              open={distOpen}
-              value={distanceUnit}
-              items={distanceUnits}
-              setOpen={open => {
-                if (open) {
-                  setDistOpen(open);
-                  setTempOpen(!open);
-                } else {
-                  setDistOpen(false); // Close dropdown if it's already open
-                }
-              }}
-              setValue={callback => {
-                setDistUnit(callback); // Update local state
-                setDistOpen(false); // Close dropdown immediately after selection
-              }}
-              style={styles.dropdown}
-              dropDownContainerStyle={styles.dropdownContainer}
-            />
+          <View style={styles.separator} />
+          <View style={styles.knowledgeCenterContainer}>
+            <Text style={styles.sectionHeader}>Credits</Text>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => setAuthorsModalVisible(true)}
+            >
+              {/* <MaterialIcons name="people-outline" size={23} color="#fff" /> */}
+              <Image
+                source={require('./../assets/images/icon-author-filled.png')}
+                style={styles.logo}
+              />
+              <Text style={styles.applyButtonText}>Authors</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={handleApplyChanges}
-          >
-            {/* <Icon name="checkmark-circle-outline" size={23} color="#fff" /> */}
-            <Image
-              source={require('./../assets/images/icon-tick-filled.png')}
-              style={styles.logo}
-            />
-            <Text style={styles.applyButtonText}>Apply Changes</Text>
-          </TouchableOpacity>
-        </>
-        {/* Separator */}
-        <View style={styles.separator} />
-        <View style={styles.knowledgeCenterContainer}>
-          <Text style={styles.sectionHeader}>Knowledge Center</Text>
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={() => setKnowledgeModalVisible(true)}
-          >
-            {/* <MaterialIcons name="menu-book" size={23} color="#fff" /> */}
-            <Image
-              source={require('./../assets/images/icon-knowledge-filled.png')}
-              style={styles.logo}
-            />
-            <Text style={styles.applyButtonText}>Open Knowledge Center</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.separator} />
-        <View style={styles.knowledgeCenterContainer}>
-          <Text style={styles.sectionHeader}>Credits</Text>
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={() => setAuthorsModalVisible(true)}
-          >
-            {/* <MaterialIcons name="people-outline" size={23} color="#fff" /> */}
-            <Image
-              source={require('./../assets/images/icon-author-filled.png')}
-              style={styles.logo}
-            />
-            <Text style={styles.applyButtonText}>Authors</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.separator} />
-        <View style={styles.knowledgeCenterContainer}>
-          <Text style={styles.sectionHeader}>
-            Learn more about AgWeatherNet
-          </Text>
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() =>
-              Linking.openURL(
-                'https://treefruit.wsu.edu/tools-resources/wsu-agweathernet/',
-              )
-            }
-          >
-            {/* <MaterialIcons name="open-in-new" size={23} color="#A60F2D" /> */}
-            <Image
-              source={require('./../assets/images/icon-open-filled.png')}
-              style={styles.logo}
-            />
-            <Text style={styles.linkButtonText}>
-              Visit AgWeatherNet Website
+          <View style={styles.separator} />
+          <View style={styles.knowledgeCenterContainer}>
+            <Text style={styles.sectionHeader}>
+              Learn more about AgWeatherNet
             </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() =>
+                Linking.openURL(
+                  'https://treefruit.wsu.edu/tools-resources/wsu-agweathernet/',
+                )
+              }
+            >
+              {/* <MaterialIcons name="open-in-new" size={23} color="#A60F2D" /> */}
+              <Image
+                source={require('./../assets/images/icon-open-filled.png')}
+                style={styles.logo}
+              />
+              <Text style={styles.linkButtonText}>
+                Visit AgWeatherNet Website
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
       <Footer />
       <KnowledgeModal
         modalVisible={knowledgeModalVisible}

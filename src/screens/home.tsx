@@ -10,102 +10,83 @@ import { useEffect, useRef, useState } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-import axios from 'axios';
 import { useUnitConversion } from '../hooks/useUnitConversion';
 import { useSettings } from '../contexts/SettingsContext';
+import { useUsbSerial } from '../contexts/UsbDataContext';
 
 export default function HomeScreen() {
-  const mapRef = useRef<MapView | null>(null); // Map reference
+  const mapRef = useRef<MapView | null>(null);
   const { temperatureUnit, distanceUnit } = useSettings();
-  const [droneLocation, setDroneLocation] = useState({
-    latitude: 0,
-    longitude: 0,
-  });
 
-  const [generalInfo, setGeneralInfo] = useState<{
-    date: string;
-    time: string;
-    altitude: number | null;
-    internalTemp: number | null;
-    internalRH: string;
-    internalPres: string;
-    airTemp: number | null;
-    weatherRH: string;
-  }>({
-    date: '',
-    time: '',
-    altitude: null,
-    internalTemp: null,
-    internalRH: '',
-    internalPres: '',
-    airTemp: null,
-    weatherRH: '',
-  });
+  /* New changes */
+  const { data, connected, connect } = useUsbSerial();
+  // Parse data from USB context
+  const wsData = data?.WS_Data || {};
+  const latitude = wsData.latitude ?? 0;
+  const longitude = wsData.longitude ?? 0;
+
+  // Parse and convert values
+  const { convertTemperature, convertDistance } = useUnitConversion();
+
+  // Helper to extract and convert values safely
+  const parseValue = (val: string | number | undefined, unit: string) => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+      const num = parseFloat(val);
+      if (isNaN(num)) return null;
+      return num;
+    }
+    return null;
+  };
+
+  const altitudeRaw = wsData.altitude;
+  const internalTempRaw = wsData.Internal_Temp;
+  const airTempRaw = wsData.Weather?.Air_Temperature;
+
+  const altitude = parseValue(altitudeRaw, 'm');
+  const internalTemp = parseValue(internalTempRaw, '°C');
+  const airTemp = parseValue(airTempRaw, '°C');
+
+  const convertedAltitude =
+    altitude !== null ? convertDistance(altitude) : null;
+  const convertedInternalTemp =
+    internalTemp !== null ? convertTemperature(internalTemp) : null;
+  const convertedAirTemp =
+    airTemp !== null ? convertTemperature(airTemp) : null;
 
   const [mapRegion, setMapRegion] = useState({
-    latitude: droneLocation.latitude,
-    longitude: droneLocation.longitude,
+    latitude,
+    longitude,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
 
-  // const { ipAddress, error } = useLocalIPv4();
-  const { convertTemperature, convertDistance } = useUnitConversion();
-
+  // Connect to USB on mount if not already connected
   useEffect(() => {
-    getDroneInfo();
-  }, []);
+    if (!connected) {
+      connect();
+    }
+  }, [connected, connect]);
 
-  const getDroneInfo = async () => {
-    try {
-      console.log('Data is fetching.');
-      const response = await axios.get('http://10.0.2.2:8000/ws_data');
-      const {
-        Date: date,
-        Time: time,
-        latitude: latitude,
-        longitude: longitude,
-        altitude: altitude,
-        Internal_Temp: internalTemp,
-        Internal_RH: internalRH,
-        Internal_Pres: internalPres,
-        Weather: { Air_Temperature: airTemp, RH: weatherRH },
-      } = response.data;
-
-      // Convert values based on global units
-      const convertedAltitude = convertDistance(altitude);
-      const convertedInternalTemp = convertTemperature(internalTemp);
-      const convertedAirTemp = convertTemperature(airTemp);
-
-      setDroneLocation({ latitude, longitude });
-      setGeneralInfo({
-        date,
-        time,
-        altitude: parseFloat(convertedAltitude.toFixed(2)),
-        internalTemp: parseFloat(convertedInternalTemp.toFixed(2)),
-        internalRH,
-        internalPres,
-        airTemp: parseFloat(convertedAirTemp.toFixed(2)),
-        weatherRH,
-      });
+  // Update map region when location changes
+  useEffect(() => {
+    if (latitude && longitude) {
       setMapRegion({
         latitude,
         longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
-    } catch (error) {
-      console.error('Error fetching drone location:', error);
     }
-  };
+  }, [latitude, longitude]);
 
   const centerMapOnDrone = () => {
     console.log('Centering map on drone location...');
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
-          latitude: droneLocation.latitude,
-          longitude: droneLocation.longitude,
+          latitude,
+          longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         },
@@ -123,15 +104,13 @@ export default function HomeScreen() {
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           initialRegion={
-            droneLocation.latitude !== 0 && droneLocation.longitude !== 0
-              ? mapRegion
-              : undefined
+            latitude !== 0 && longitude !== 0 ? mapRegion : undefined
           }
           showsUserLocation={false} // Don't show device GPS location
           followsUserLocation={false} // Don't follow device
         >
           {/* Custom marker to act like "user location" */}
-          <Marker coordinate={droneLocation}>
+          <Marker coordinate={{ latitude, longitude }}>
             {/* Alternate styles depending on likings: blue dot & drone icon */}
             {/* <View style={styles.fakeUserDotOuter}>
             <View style={styles.fakeUserDotInner} />
@@ -156,11 +135,15 @@ export default function HomeScreen() {
 
         <View style={styles.generalInfo}>
           <Text style={styles.infoText}>
-            Date: {generalInfo.date}, Time: {generalInfo.time}
+            Date: {wsData.Date || '--'}, Time: {wsData.Time || '--'}
             {'\n'}
-            Temp: {generalInfo.airTemp} {temperatureUnit}, RH:{' '}
-            {generalInfo.weatherRH}
-            {'%'}, Alt: {generalInfo.altitude} {distanceUnit}
+            Temp:{' '}
+            {convertedAirTemp !== null
+              ? convertedAirTemp.toFixed(2)
+              : '--'}{' '}
+            {temperatureUnit}, RH: {wsData.Weather?.RH || '--'}% , Alt:{' '}
+            {convertedAltitude !== null ? convertedAltitude.toFixed(2) : '--'}{' '}
+            {distanceUnit}
           </Text>
         </View>
 
