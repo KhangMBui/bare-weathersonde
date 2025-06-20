@@ -8,184 +8,134 @@ import {
 } from 'react-native';
 // import {Stack} from 'expo-router';
 import OptionHeader from '../components/optionHeader';
-import axios from 'axios';
-import {useEffect, useState} from 'react';
-import {useUnitConversion} from '../hooks/useUnitConversion';
-import {useHistoricalData} from '../contexts/HistoricalDataContext';
-import {useSettings} from '../contexts/SettingsContext';
+import { useEffect, useState } from 'react';
+import { useUnitConversion } from '../hooks/useUnitConversion';
+import { useHistoricalData } from '../contexts/HistoricalDataContext';
+import { useSettings } from '../contexts/SettingsContext';
+import { useUsbSerial } from '../contexts/UsbDataContext';
 
 export default function DataScreen() {
-  const {historicalData, setHistoricalData} = useHistoricalData();
-
+  const { historicalData, setHistoricalData } = useHistoricalData();
   const [expandedItem, setExpandedItem] = useState<string | null>(null); // Track expanded item by unique identifier
   const [selectedTab, setSelectedTab] = useState('Real-Time');
+  const { temperatureUnit, distanceUnit } = useSettings();
+  const { convertTemperature, convertDistance } = useUnitConversion();
+  const { data } = useUsbSerial();
 
-  const {temperatureUnit, distanceUnit} = useSettings();
-  const {convertTemperature, convertDistance} = useUnitConversion();
+  const wsData = data?.WS_Data || {};
+  const inversionData = calculateInversion(historicalData);
 
-  const [generalInfo, setGeneralInfo] = useState<{
-    date: string;
-    time: string;
-    altitude: number | null;
-    internalTemp: number | null;
-    internalRH: string;
-    internalPres: string;
-    airTemp: number | null;
-    weatherRH: string;
-    inversionIntensity: string;
-    inversionHeight: string;
-    inversionRate: string;
-    totalSamples: string;
-  }>({
-    date: '',
-    time: '',
-    altitude: null,
-    internalTemp: null,
-    internalRH: '',
-    internalPres: '',
-    airTemp: null,
-    weatherRH: '',
-    inversionIntensity: '',
-    inversionHeight: '',
-    inversionRate: '',
-    totalSamples: '',
-  });
-
-  // // For constant data fetching on the historical page
-  // const [historicalData, setHistoricalData] = useState<any[]>([]);
-
-  useEffect(() => {
-    let isMounted = true; // To prevent state updates on unmounted components
-
-    const fetchData = async () => {
-      try {
-        await getDroneInfo();
-        await getInversionData();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-
-      if (isMounted) {
-        setTimeout(fetchData, 3000); // Schedule the next fetch after 3 seconds
-      }
-    };
-
-    fetchData(); // Start the first fetch
-
-    return () => {
-      isMounted = false; // Cleanup on component unmount
-    };
-  }, []);
-
-  useEffect(() => {
-    // Append new historical data whenever generalInfo changes
-    if (generalInfo.date && generalInfo.time) {
-      const newEntry = {
-        date: generalInfo.date,
-        time: generalInfo.time,
-        altitude: generalInfo.altitude
-          ? convertDistance(generalInfo.altitude) // Convert altitude
-          : null,
-        internalTemp: generalInfo.internalTemp
-          ? convertTemperature(generalInfo.internalTemp) // Convert internal temperature
-          : null,
-        internalRH: generalInfo.internalRH,
-        internalPres: generalInfo.internalPres,
-        airTemp: generalInfo.airTemp
-          ? convertTemperature(generalInfo.airTemp) // Convert air temperature
-          : null,
-        weatherRH: generalInfo.weatherRH,
-        inversionIntensity: generalInfo.inversionIntensity,
-        inversionHeight: generalInfo.inversionHeight,
-        inversionRate: generalInfo.inversionRate,
+  function calculateInversion(records: typeof historicalData) {
+    if (!records || records.length === 0) {
+      return {
+        inversionIntensity: 0,
+        inversionHeight: 0,
+        inversionRate: 0,
+        highest: null,
+        lowest: null,
+        totalSamples: 0,
       };
+    }
 
+    // Find highest and lowest temperature records
+    let highest = records[0];
+    let lowest = records[0];
+
+    for (const rec of records) {
+      if (typeof rec.airTemp === 'number' && typeof rec.altitude === 'number') {
+        if (rec.airTemp > highest.airTemp) highest = rec;
+        if (rec.airTemp < lowest.airTemp) lowest = rec;
+      }
+    }
+
+    let inversionIntensity = 0;
+    let inversionHeight = 0;
+    let inversionRate = 0;
+
+    if (
+      highest &&
+      lowest &&
+      typeof highest.altitude === 'number' &&
+      typeof lowest.altitude === 'number' &&
+      highest.altitude > lowest.altitude
+    ) {
+      inversionIntensity = highest.airTemp - lowest.airTemp;
+      inversionHeight = highest.altitude - lowest.altitude;
+      inversionRate =
+        inversionHeight !== 0 ? inversionIntensity / inversionHeight : 0;
+    }
+
+    return {
+      inversionIntensity,
+      inversionHeight,
+      inversionRate,
+      highest,
+      lowest,
+      totalSamples: records.length,
+    };
+  }
+
+  // Helper to extract and convert values safely
+  const parseValue = (val: string | number | undefined, unit: string) => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+      const num = parseFloat(val);
+      if (isNaN(num)) return null;
+      return num;
+    }
+    return null;
+  };
+
+  const generalInfo = {
+    date: wsData.Date || '',
+    time: wsData.Time || '',
+    altitude: (() => {
+      const parsed = parseValue(wsData.altitude, 'm');
+      return parsed !== null ? convertDistance(parsed) : null;
+    })(),
+    internalTemp: wsData.Internal_Temp
+      ? (() => {
+          const parsedInternalTemp = parseValue(wsData.Internal_Temp, '°C');
+          return parsedInternalTemp !== null
+            ? convertTemperature(parsedInternalTemp)
+            : null;
+        })()
+      : null,
+    internalRH: wsData.Internal_RH || '',
+    internalPres: wsData.Internal_Pres || '',
+    airTemp: wsData.Weather?.Air_Temperature
+      ? (() => {
+          const parsedAirTemp = parseValue(
+            wsData.Weather.Air_Temperature,
+            '°C',
+          );
+          return parsedAirTemp !== null
+            ? convertTemperature(parsedAirTemp)
+            : null;
+        })()
+      : null,
+    weatherRH: wsData.Weather?.RH || '',
+    inversionIntensity: inversionData.inversionIntensity ?? '',
+    inversionHeight: inversionData.inversionHeight ?? '',
+    inversionRate: inversionData.inversionRate ?? '',
+    totalSamples: inversionData.totalSamples ?? '',
+  };
+
+  // Update historical data when generalInfo changes
+  useEffect(() => {
+    if (generalInfo.date && generalInfo.time) {
+      const newEntry = { ...generalInfo };
       setHistoricalData(prevData => {
-        // Check if the new entry already exists in the historical data
         const isDuplicate = prevData.some(
           entry => entry.date === newEntry.date && entry.time === newEntry.time,
         );
-
-        if (isDuplicate) {
-          return prevData; // Avoid adding duplicate entries
-        }
+        if (isDuplicate) return prevData;
         const updatedData = [newEntry, ...prevData];
-        return updatedData.slice(0, 20); // Keep only the latest 20 entries
+        return updatedData.slice(0, 20);
       });
     }
-  }, [generalInfo]);
-
-  const getDroneInfo = async () => {
-    try {
-      const response = await axios.get(
-        'https://9e3c-50-205-46-69.ngrok-free.app/ws_data',
-      );
-      const {
-        Date: date,
-        Time: time,
-        latitude: latitude,
-        longitude: longitude,
-        altitude: altitude,
-        Internal_Temp: internalTemp,
-        Internal_RH: internalRH,
-        Internal_Pres: internalPres,
-        Weather: {Air_Temperature: airTemp, RH: weatherRH},
-      } = response.data;
-
-      // Convert values based on global units
-      const convertedAltitude = convertDistance(altitude);
-      const convertedInternalTemp = convertTemperature(internalTemp);
-      const convertedAirTemp = convertTemperature(airTemp);
-
-      const snapshot = {
-        date,
-        time,
-        latitude,
-        longitude,
-        altitude: convertedAltitude,
-        internalTemp: convertedInternalTemp,
-        internalRH,
-        internalPres,
-        airTemp: convertedAirTemp,
-        weatherRH,
-      };
-
-      // Update live data
-      setGeneralInfo(prev => ({
-        ...prev,
-        ...snapshot,
-      }));
-
-      // Add snapshot to the top of the history
-      // setHistoricalData((prev) => [snapshot, ...prev]);
-    } catch (error) {
-      console.error('Error fetching drone location:', error);
-    }
-  };
-
-  const getInversionData = async () => {
-    try {
-      const response = await axios.get(
-        'https://9e3c-50-205-46-69.ngrok-free.app/inversion',
-      );
-      const data = response.data;
-
-      const inversionData = {
-        inversionIntensity: data.inversion_intensity ?? NaN,
-        inversionHeight: data.inversion_height ?? NaN,
-        inversionRate: data.inversion_rate ?? NaN,
-        totalSamples: data.total_samples ?? 0,
-      };
-
-      // Update generalInfo with inversion data
-      setGeneralInfo(prev => ({
-        ...prev,
-        ...inversionData,
-      }));
-    } catch (error) {
-      console.error('Error fetching inversion data:', error);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generalInfo.date, generalInfo.time]);
 
   return (
     <>
@@ -240,19 +190,26 @@ export default function DataScreen() {
               <View style={styles.infoGroup}>
                 <Text style={styles.label}>{'\t'}🔥 Intensity: </Text>
                 <Text style={styles.value}>
-                  {parseFloat(generalInfo.inversionIntensity).toFixed(3)} {'°C'}
+                  {parseFloat(
+                    generalInfo.inversionIntensity.toString(),
+                  ).toFixed(3)}{' '}
+                  {'°C'}
                 </Text>
               </View>
               <View style={styles.infoGroup}>
                 <Text style={styles.label}>{'\t'}📏 Height:</Text>
                 <Text style={styles.value}>
-                  {parseFloat(generalInfo.inversionHeight).toFixed(3)} {'m'}
+                  {parseFloat(generalInfo.inversionHeight.toString()).toFixed(
+                    3,
+                  )}{' '}
+                  {'m'}
                 </Text>
               </View>
               <View style={styles.infoGroup}>
                 <Text style={styles.label}>{'\t'}📉 Rate:</Text>
                 <Text style={styles.value}>
-                  {parseFloat(generalInfo.inversionRate).toFixed(3)} {'°C/m'}
+                  {parseFloat(generalInfo.inversionRate.toString()).toFixed(3)}{' '}
+                  {'°C/m'}
                 </Text>
               </View>
             </View>
@@ -279,8 +236,9 @@ export default function DataScreen() {
           </View>
         ) : (
           <ScrollView
-            style={{padding: 10}}
-            contentContainerStyle={{paddingBottom: 80}}>
+            style={{ padding: 10 }}
+            contentContainerStyle={{ paddingBottom: 80 }}
+          >
             {/* <Text style={styles.infoTitle}>WeatherSonde Historical</Text> */}
             {historicalData.map((item, index) => {
               const uniqueId = `${item.date}-${item.time}`; // Create a unique identifier for each item
@@ -291,7 +249,8 @@ export default function DataScreen() {
                       setExpandedItem(
                         expandedItem === uniqueId ? null : uniqueId,
                       )
-                    }>
+                    }
+                  >
                     <Text style={styles.value}>
                       📅 Date: {item.date} 🕒 Time: {item.time}
                       {'\n'}
@@ -336,11 +295,6 @@ export default function DataScreen() {
             })}
           </ScrollView>
         )}
-        {/* 
-      <SensorModal
-        isVisible={isModalVisible}
-        onClose={() => setModalVisible(false)}
-      /> */}
         <Footer />
       </View>
     </>
@@ -372,7 +326,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -386,7 +340,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,

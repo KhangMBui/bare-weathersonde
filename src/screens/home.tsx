@@ -13,6 +13,7 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { useUnitConversion } from '../hooks/useUnitConversion';
 import { useSettings } from '../contexts/SettingsContext';
 import { useUsbSerial } from '../contexts/UsbDataContext';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 export default function HomeScreen() {
   const mapRef = useRef<MapView | null>(null);
@@ -95,6 +96,33 @@ export default function HomeScreen() {
     }
   };
 
+  useEffect(() => {
+    async function requestLocationPermission() {
+      if (Platform.OS === 'android') {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: 'Location Permission',
+              message: 'This app needs access to your location for maps.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            },
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('Location permission granted');
+          } else {
+            console.log('Location permission denied');
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    }
+    requestLocationPermission();
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#A60F2D' }}>
       <View style={styles.mainContainer}>
@@ -110,15 +138,18 @@ export default function HomeScreen() {
           followsUserLocation={false} // Don't follow device
         >
           {/* Custom marker to act like "user location" */}
-          <Marker coordinate={{ latitude, longitude }}>
+          <Marker coordinate={{ latitude, longitude }} style={{ zIndex: 999 }}>
             {/* Alternate styles depending on likings: blue dot & drone icon */}
             {/* <View style={styles.fakeUserDotOuter}>
             <View style={styles.fakeUserDotInner} />
           </View> */}
-            <Image
-              source={require('./../assets/images/droneicon.png')}
-              style={styles.droneLogo}
-            />
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Image
+                source={require('./../assets/images/droneicon.png')}
+                style={styles.droneLogo}
+                resizeMode="contain"
+              />
+            </View>
           </Marker>
         </MapView>
 
