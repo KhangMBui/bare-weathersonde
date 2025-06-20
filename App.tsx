@@ -14,6 +14,7 @@ import HomeScreen from './src/screens/home';
 import { StatusBar } from 'react-native';
 import 'react-native-url-polyfill/auto';
 import UsbSerialScreen from './src/screens/UsbSerialScreen';
+import { RecordingProvider } from './src/contexts/RecordingContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,28 +22,30 @@ function App(): React.JSX.Element {
   return (
     <>
       <StatusBar backgroundColor="#A60F2D" barStyle="light-content" />
-      <SettingsProvider>
-        <HistoricalDataProvider>
-          <UsbSerialProvider>
-            <NavigationContainer>
-              <Stack.Navigator
-                initialRouteName="Home"
-                screenOptions={{ headerShown: false }}
-              >
-                <Stack.Screen name="UsbReader" component={UsbReader} />
-                <Stack.Screen name="UsbSerial" component={UsbSerialScreen} />
-                <Stack.Screen name="Home" component={HomeScreen} />
-                <Stack.Screen name="Data" component={DataScreen} />
-                <Stack.Screen name="Analytics" component={AnalyticsScreen} />
-                <Stack.Screen name="Weather" component={WeatherScreen} />
-                <Stack.Screen name="Settings" component={SettingsScreen} />
-                {/* Add other screens here */}
-              </Stack.Navigator>
-              <Footer />
-            </NavigationContainer>
-          </UsbSerialProvider>
-        </HistoricalDataProvider>
-      </SettingsProvider>
+      <RecordingProvider>
+        <SettingsProvider>
+          <HistoricalDataProvider>
+            <UsbSerialProvider>
+              <NavigationContainer>
+                <Stack.Navigator
+                  initialRouteName="Home"
+                  screenOptions={{ headerShown: false }}
+                >
+                  <Stack.Screen name="UsbReader" component={UsbReader} />
+                  <Stack.Screen name="UsbSerial" component={UsbSerialScreen} />
+                  <Stack.Screen name="Home" component={HomeScreen} />
+                  <Stack.Screen name="Data" component={DataScreen} />
+                  <Stack.Screen name="Analytics" component={AnalyticsScreen} />
+                  <Stack.Screen name="Weather" component={WeatherScreen} />
+                  <Stack.Screen name="Settings" component={SettingsScreen} />
+                  {/* Add other screens here */}
+                </Stack.Navigator>
+                <Footer />
+              </NavigationContainer>
+            </UsbSerialProvider>
+          </HistoricalDataProvider>
+        </SettingsProvider>
+      </RecordingProvider>
     </>
   );
 }
