@@ -171,11 +171,10 @@ export default function DataScreen() {
     initDB();
   }, []);
 
+  // When recording:
   useEffect(() => {
     if (isRecording && generalInfo.date && generalInfo.time) {
-      (async () => {
-        // Fetch latest records to check for duplicates
-        const records = await fetchRecords();
+      fetchRecords(records => {
         const last = records[0];
         const round2 = (val: any) =>
           val !== undefined && val !== null && val !== '' && !isNaN(Number(val))
@@ -195,26 +194,23 @@ export default function DataScreen() {
           inversionRate: round2(generalInfo.inversionRate),
         };
 
-        // Only insert if not duplicate
         const isDuplicate =
           last && last.date === newEntry.date && last.time === newEntry.time;
 
         if (!isDuplicate) {
-          await insertRecord(newEntry);
-          setTotalSamples(prev => prev + 1);
-          const updatedRecords = await fetchRecords();
-          setHistoricalData(updatedRecords);
+          insertRecord(newEntry, () => {
+            setTotalSamples(prev => prev + 1);
+            fetchRecords(updatedRecords => setHistoricalData(updatedRecords));
+          });
         }
-      })();
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generalInfo, isRecording, setHistoricalData]);
 
   useEffect(() => {
     if (selectedTab === 'Historical') {
-      (async () => {
-        const records = await fetchRecords();
-        setHistoricalData(records);
-      })();
+      fetchRecords(records => setHistoricalData(records));
     }
   }, [selectedTab]);
 
@@ -363,10 +359,11 @@ export default function DataScreen() {
                   alignItems: 'center',
                   width: '30%',
                 }}
-                onPress={async () => {
-                  await clearRecords();
-                  setTotalSamples(0);
-                  setHistoricalData([]);
+                onPress={() => {
+                  clearRecords(() => {
+                    setTotalSamples(0);
+                    setHistoricalData([]);
+                  });
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>
