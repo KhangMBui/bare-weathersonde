@@ -30,6 +30,7 @@ export default function HomeScreen() {
   const { convertTemperature, convertDistance } = useUnitConversion();
 
   // Helper to extract and convert values safely
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const parseValue = (val: string | number | undefined, unit: string) => {
     if (typeof val === 'number') return val;
     if (typeof val === 'string') {
@@ -41,17 +42,17 @@ export default function HomeScreen() {
   };
 
   const altitudeRaw = wsData.altitude;
-  const internalTempRaw = wsData.Internal_Temp;
+  // const internalTempRaw = wsData.Internal_Temp;
   const airTempRaw = wsData.Weather?.Air_Temperature;
 
   const altitude = parseValue(altitudeRaw, 'm');
-  const internalTemp = parseValue(internalTempRaw, '°C');
+  // const internalTemp = parseValue(internalTempRaw, '°C');
   const airTemp = parseValue(airTempRaw, '°C');
 
   const convertedAltitude =
     altitude !== null ? convertDistance(altitude) : null;
-  const convertedInternalTemp =
-    internalTemp !== null ? convertTemperature(internalTemp) : null;
+  // const convertedInternalTemp =
+  //   internalTemp !== null ? convertTemperature(internalTemp) : null;
   const convertedAirTemp =
     airTemp !== null ? convertTemperature(airTemp) : null;
 
@@ -82,7 +83,7 @@ export default function HomeScreen() {
   }, [latitude, longitude]);
 
   const centerMapOnDrone = () => {
-    console.log('Centering map on drone location...');
+    // console.log('Centering map on drone location...');
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
@@ -110,11 +111,11 @@ export default function HomeScreen() {
               buttonPositive: 'OK',
             },
           );
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('Location permission granted');
-          } else {
-            console.log('Location permission denied');
-          }
+          // if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          //   console.log('Location permission granted');
+          // } else {
+          //   console.log('Location permission denied');
+          // }
         } catch (err) {
           console.warn(err);
         }
@@ -172,7 +173,7 @@ export default function HomeScreen() {
             {convertedAirTemp !== null
               ? convertedAirTemp.toFixed(2)
               : '--'}{' '}
-            {temperatureUnit}, RH: {wsData.Weather?.RH || '--'}% , Alt:{' '}
+            {temperatureUnit}, RH: {wsData.Weather?.RH || '--'}, Alt:{' '}
             {convertedAltitude !== null ? convertedAltitude.toFixed(2) : '--'}{' '}
             {distanceUnit}
           </Text>

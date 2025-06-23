@@ -5,7 +5,6 @@ let db: any = null;
 export function getDb() {
   if (!db) {
     db = SQLite.openDatabase('weathersonde.db', '1.0', '', 1);
-    console.log('DB object:', db);
   }
   return db;
 }

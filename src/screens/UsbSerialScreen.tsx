@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 // --- Static test data ---
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const staticData = {
   WS_Node: {
     WS_ID: 'ws0001',
@@ -40,7 +41,9 @@ const { UsbSerial } = NativeModules;
 export default function UsbSerialScreen() {
   const [data, setData] = useState<any>(null);
   const [connected, setConnected] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [buffer, setBuffer] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // useEffect(() => {

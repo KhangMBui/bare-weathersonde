@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Platform,
   SafeAreaView,
 } from 'react-native';
-import {NativeModules, NativeEventEmitter} from 'react-native';
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 // Type definitions
 interface SerialData {
@@ -42,7 +42,7 @@ interface ConnectionStatusEvent {
 }
 
 // Import USB Serial module - now using our custom module
-const {UsbSerialModule} = NativeModules;
+const { UsbSerialModule } = NativeModules;
 const usbSerialEmitter = UsbSerialModule
   ? new NativeEventEmitter(UsbSerialModule)
   : null;
@@ -58,8 +58,8 @@ const UsbReader: React.FC = () => {
   // Function to accumulate characters and display complete lines
   const processIncomingData = React.useCallback((newData: string) => {
     // Debug: Log what we're actually receiving
-    console.log('Raw data length:', newData.length);
-    console.log('Raw data:', JSON.stringify(newData));
+    // console.log('Raw data length:', newData.length);
+    // console.log('Raw data:', JSON.stringify(newData));
 
     // Add new characters to buffer
     setDataBuffer(prev => {
@@ -149,7 +149,7 @@ const UsbReader: React.FC = () => {
           Alert.alert('Scan Complete', `Found ${devices.length} USB devices`);
         } catch (error: any) {
           // If USB scanning fails due to permissions, fall back to mock devices
-          console.log('USB scan failed, using mock devices:', error.message);
+          // console.log('USB scan failed, using mock devices:', error.message);
           const mockDevices: UsbDevice[] = [
             {
               id: 'mock-ftdi-001',
@@ -276,7 +276,7 @@ const UsbReader: React.FC = () => {
               'USB Permission Required',
               'This app needs permission to access the USB device. A system dialog will appear.',
               [
-                {text: 'Cancel', style: 'cancel'},
+                { text: 'Cancel', style: 'cancel' },
                 {
                   text: 'Request Permission',
                   onPress: async () => {
@@ -450,12 +450,14 @@ const UsbReader: React.FC = () => {
                   styles.baudRateButton,
                   selectedBaudRate === rate && styles.selectedBaudRate,
                 ]}
-                onPress={() => setSelectedBaudRate(rate)}>
+                onPress={() => setSelectedBaudRate(rate)}
+              >
                 <Text
                   style={[
                     styles.baudRateText,
                     selectedBaudRate === rate && styles.selectedBaudRateText,
-                  ]}>
+                  ]}
+                >
                   {rate}
                 </Text>
               </TouchableOpacity>
@@ -471,7 +473,8 @@ const UsbReader: React.FC = () => {
           <TouchableOpacity
             key={index}
             style={styles.deviceItem}
-            onPress={() => connectToDevice(device.id)}>
+            onPress={() => connectToDevice(device.id)}
+          >
             <Text style={styles.deviceText}>
               {device.name} - {device.id}
               {device.vendorId && device.productId && (
@@ -490,14 +493,16 @@ const UsbReader: React.FC = () => {
         {isConnected ? (
           <TouchableOpacity
             style={[styles.button, styles.disconnectButton]}
-            onPress={disconnect}>
+            onPress={disconnect}
+          >
             <Text style={styles.buttonText}>Disconnect</Text>
           </TouchableOpacity>
         ) : null}
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => sendData('Hello\n')}>
+          onPress={() => sendData('Hello\n')}
+        >
           <Text style={styles.buttonText}>Send Test Data</Text>
         </TouchableOpacity>
 
@@ -519,7 +524,8 @@ const UsbReader: React.FC = () => {
                 `Newlines (\\n): ${newlineCount}\n\n` +
                 `Current buffer content:\n${bufferPreview}`,
             );
-          }}>
+          }}
+        >
           <Text style={styles.buttonText}>Debug Buffer</Text>
         </TouchableOpacity>
 
@@ -538,7 +544,8 @@ const UsbReader: React.FC = () => {
             } else {
               Alert.alert('Empty Buffer', 'No data in buffer');
             }
-          }}>
+          }}
+        >
           <Text style={styles.buttonText}>Show Buffer</Text>
         </TouchableOpacity>
       </View>

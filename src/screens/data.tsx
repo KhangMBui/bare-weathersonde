@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Footer from '../components/footer';
 import {
   View,
@@ -15,6 +16,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useUsbSerial } from '../contexts/UsbDataContext';
 import { useRecording } from '../contexts/RecordingContext';
 import { exportDatabase } from '../hooks/useExportDatabase';
+import { calculateInversion } from '../utils/calculateInversion';
 
 // Database
 import {
@@ -37,57 +39,8 @@ export default function DataScreen() {
 
   // State for database recording
   const { isRecording, setIsRecording } = useRecording();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalSamples, setTotalSamples] = useState(0);
-
-  function calculateInversion(records: typeof historicalData) {
-    if (!records || records.length === 0) {
-      return {
-        inversionIntensity: 0,
-        inversionHeight: 0,
-        inversionRate: 0,
-        highest: null,
-        lowest: null,
-        totalSamples: 0,
-      };
-    }
-
-    // Find highest and lowest temperature records
-    let highest = records[0];
-    let lowest = records[0];
-
-    for (const rec of records) {
-      if (typeof rec.airTemp === 'number' && typeof rec.altitude === 'number') {
-        if (rec.airTemp > highest.airTemp) highest = rec;
-        if (rec.airTemp < lowest.airTemp) lowest = rec;
-      }
-    }
-
-    let inversionIntensity = 0;
-    let inversionHeight = 0;
-    let inversionRate = 0;
-
-    if (
-      highest &&
-      lowest &&
-      typeof highest.altitude === 'number' &&
-      typeof lowest.altitude === 'number' &&
-      highest.altitude > lowest.altitude
-    ) {
-      inversionIntensity = highest.airTemp - lowest.airTemp;
-      inversionHeight = highest.altitude - lowest.altitude;
-      inversionRate =
-        inversionHeight !== 0 ? inversionIntensity / inversionHeight : 0;
-    }
-
-    return {
-      inversionIntensity,
-      inversionHeight,
-      inversionRate,
-      highest,
-      lowest,
-      totalSamples: records.length,
-    };
-  }
 
   const generalInfo = useMemo(() => {
     // Helper to extract and convert values safely
@@ -212,7 +165,7 @@ export default function DataScreen() {
     if (selectedTab === 'Historical') {
       fetchRecords(records => setHistoricalData(records));
     }
-  }, [selectedTab]);
+  }, [selectedTab, setHistoricalData]);
 
   return (
     <>
@@ -259,7 +212,7 @@ export default function DataScreen() {
 
             <View style={styles.infoCard}>
               <Text style={styles.label}>💦 Humidity:</Text>
-              <Text style={styles.value}>{generalInfo.weatherRH} %</Text>
+              <Text style={styles.value}>{generalInfo.weatherRH}</Text>
             </View>
 
             <View style={styles.infoCardGroup}>
@@ -303,7 +256,7 @@ export default function DataScreen() {
               </View>
               <View style={styles.infoGroup}>
                 <Text style={styles.label}>{'\t'}💧 RH:</Text>
-                <Text style={styles.value}>{generalInfo.internalRH} %</Text>
+                <Text style={styles.value}>{generalInfo.internalRH}</Text>
               </View>
               <View style={styles.infoGroup}>
                 <Text style={styles.label}>{'\t'}📊 Pressure:</Text>
@@ -398,12 +351,14 @@ export default function DataScreen() {
                             🌡️ Internal Temp: {item.internalTemp}{' '}
                             {temperatureUnit}
                             {'\n'}
-                            💧 Internal RH: {item.internalRH} %{'\n'}
+                            💧 Internal RH: {item.internalRH}
+                            {'\n'}
                             📊 Internal Pressure: {item.internalPres}
                             {'\n'}
                             🌤️ Air Temp: {item.airTemp} {temperatureUnit}
                             {'\n'}
-                            💦 RH: {item.weatherRH} %{'\n'}
+                            💦 RH: {item.weatherRH}
+                            {'\n'}
                             🔥 Inversion Intensity:{' '}
                             {parseFloat(item.inversionIntensity).toFixed(2) ??
                               NaN}{' '}
