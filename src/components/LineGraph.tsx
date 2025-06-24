@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Text,
   Platform,
+  Image,
 } from 'react-native';
 import {
   Canvas,
@@ -14,12 +15,15 @@ import {
   Text as SkiaText,
   Line,
   matchFont,
+  Paint,
+  vec,
+  LinearGradient,
 } from '@shopify/react-native-skia';
 import { calculateInversion } from '../utils/calculateInversion';
 import { useUsbSerial } from '../contexts/UsbDataContext';
 
 const fontFamily = Platform.select({ ios: 'helvetia', default: 'sans-serif' });
-const font = matchFont({ fontFamily, fontSize: 14 });
+const font = matchFont({ fontFamily, fontSize: 12 });
 
 // Utility function to generate tick marks
 const generateTicks = (min: number, max: number, desiredStepSize: number) => {
@@ -43,6 +47,12 @@ const LineGraph = ({
   const { data: usbData } = useUsbSerial();
   const wsData = usbData?.WS_Data || {};
   const inversionData = calculateInversion([wsData]);
+  // const [selectedPoint, setSelectedPoint] = React.useState<null | {
+  //   x: number;
+  //   y: number;
+  //   temp: number;
+  //   altitude: number;
+  // }>(null);
 
   // console.log('LineGraph data:', data);
 
@@ -140,13 +150,6 @@ const LineGraph = ({
     );
   }
 
-  // Normalize the data to fit within the graph dimensions
-  // const points = sortedData.map(item => ({
-  //   x: 50 + ((item[xAxisDataKey] - minX) / (maxX - minX)) * 300, // Scale x-axis to fit between 50 and 350
-  //   y:
-  //     300 - ((item.altitude - minAltitude) / (maxAltitude - minAltitude)) * 250, // Scale y-axis to fit between 300 and 50
-  // }));
-
   const points = sortedData
     .map(item => ({
       x: 50 + ((item[xAxisDataKey] - minX) / (maxX - minX)) * 300,
@@ -179,12 +182,14 @@ const LineGraph = ({
   // }
 
   // Create a path for the line graph
-  const path = Skia.Path.Make();
-  if (points.length > 0) {
-    path.moveTo(points[0].x, points[0].y); // Start at the first point
-    points.forEach(point => {
-      path.lineTo(point.x, point.y); // Draw a line to the next point
-    });
+  const path = getStraightPath(points);
+  // Area fill under the line (delicate)
+  let fillPath = Skia.Path.Make();
+  if (points.length > 1) {
+    fillPath.moveTo(points[0].x, 300);
+    points.forEach(p => fillPath.lineTo(p.x, p.y));
+    fillPath.lineTo(points[points.length - 1].x, 300);
+    fillPath.close();
   }
 
   const xStepSize = (maxX - minX) / 5; // Divide the range into 5 steps
@@ -197,29 +202,72 @@ const LineGraph = ({
     parseFloat(tick.toFixed(1)),
   ); // Format to 1 decimal place
 
+  function getSmoothPath(points: { x: number; y: number }[]) {
+    if (points.length < 2) return Skia.Path.Make();
+    const path = Skia.Path.Make();
+
+    // For curvy line
+    path.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cpx = (prev.x + curr.x) / 2;
+      path.cubicTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+    }
+    return path;
+  }
+
+  function getStraightPath(points: { x: number; y: number }[]) {
+    if (points.length < 2) return Skia.Path.Make();
+    const path = Skia.Path.Make();
+    path.moveTo(points[0].x, points[0].y);
+    points.forEach(point => {
+      path.lineTo(point.x, point.y);
+    });
+    return path;
+  }
+
   return (
     <>
-      <View style={styles.inversionContainer}>
-        <View style={styles.infoCardGroup}>
-          <Text style={styles.titleLabel}>🌪️ Inversion Data: </Text>
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>{'\t'}🔥 Intensity: </Text>
-            <Text style={styles.value}>
-              {inversionData.inversionIntensity.toFixed(3)} {'°C'}
-            </Text>
-          </View>
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>{'\t'}📏 Height:</Text>
-            <Text style={styles.value}>
-              {inversionData.inversionHeight.toFixed(3)} {'m'}
-            </Text>
-          </View>
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>{'\t'}📉 Rate:</Text>
-            <Text style={styles.value}>
-              {inversionData.inversionRate.toFixed(3)} {'°C/m'}
-            </Text>
-          </View>
+      <View style={styles.inversionCard}>
+        <Text style={styles.inversionTitle}>
+          <Image
+            source={require('./../assets/images/icon-inversion-color.png')}
+            style={styles.icon}
+          />{' '}
+          Inversion Data
+        </Text>
+
+        <View style={styles.divider} />
+        <View style={styles.metricRow}>
+          <Image
+            source={require('./../assets/images/icon-intensity-color.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.metricLabel}>Intensity</Text>
+          <Text style={styles.metricValue}>
+            {inversionData.inversionIntensity.toFixed(3)} °C
+          </Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Image
+            source={require('./../assets/images/icon-height-color.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.metricLabel}>Height</Text>
+          <Text style={styles.metricValue}>
+            {inversionData.inversionHeight.toFixed(3)} m
+          </Text>
+        </View>
+        <View style={styles.metricRow}>
+          <Image
+            source={require('./../assets/images/icon-rate-color.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.metricLabel}>Rate</Text>
+          <Text style={styles.metricValue}>
+            {inversionData.inversionRate.toFixed(3)} °C/m
+          </Text>
         </View>
       </View>
       {/* <View style={{ padding: 10, backgroundColor: '#eee', margin: 10 }}>
@@ -235,6 +283,13 @@ const LineGraph = ({
       <View style={styles.graphContainer}>
         <Canvas style={styles.canvas}>
           {/* Draw x-axis */}
+          <Paint>
+            <LinearGradient
+              start={vec(0, 0)}
+              end={vec(400, 350)}
+              colors={['#f8fafc', '#e0e7ef']}
+            />
+          </Paint>
           <Line
             p1={{ x: 50, y: 300 }}
             p2={{ x: 350, y: 300 }}
@@ -257,7 +312,7 @@ const LineGraph = ({
             y={14}
             text="Altitude (m)"
             font={font}
-            transform={[{ rotate: -Math.PI / 2 }]} // Rotate text for vertical alignment
+            transform={[{ rotate: -Math.PI / 2 }]}
           />
 
           {/* Draw tick marks and labels for x-axis */}
@@ -276,7 +331,6 @@ const LineGraph = ({
                     x: 50 + ((value - minX) / (maxX - minX)) * 300,
                     y: 305,
                   }}
-                  color="#000"
                   strokeWidth={1}
                 />
                 <SkiaText
@@ -295,56 +349,100 @@ const LineGraph = ({
           {yTicks.map((value, index) => {
             const label = value.toFixed(1); // Format to 1 decimal place
             const textWidth = font?.measureText(label).width ?? 0;
+            const y =
+              300 - ((value - minAltitude) / (maxAltitude - minAltitude)) * 250;
 
             return (
               <React.Fragment key={`y-tick-${value ?? 'NA'}-${index}`}>
                 <Line
-                  p1={{
-                    x: 54,
-                    y:
-                      300 -
-                      ((value - minAltitude) / (maxAltitude - minAltitude)) *
-                        250,
-                  }}
-                  p2={{
-                    x: 46,
-                    y:
-                      300 -
-                      ((value - minAltitude) / (maxAltitude - minAltitude)) *
-                        250,
-                  }}
+                  p1={{ x: 54, y }}
+                  p2={{ x: 46, y }}
                   color="#000"
                   strokeWidth={1}
+                  opacity={0.7}
                 />
                 <SkiaText
                   x={45 - textWidth - 5} // Right-align the label
-                  y={
-                    300 -
-                    ((value - minAltitude) / (maxAltitude - minAltitude)) *
-                      250 +
-                    5
-                  }
+                  y={y + 4}
                   text={label}
                   font={font}
                 />
               </React.Fragment>
             );
           })}
+          {/* Area fill under the line */}
+          {points.length > 1 && (
+            <Path path={fillPath} style="fill" color="#A20025" opacity={0.05} />
+          )}
 
           {/* Draw the line graph */}
-          <Path path={path} color="#A20025" style="stroke" strokeWidth={3} />
+          {/* Shadow under the line */}
+          <Path
+            path={path}
+            style="stroke"
+            strokeWidth={7}
+            color="#A20025"
+            opacity={0.13}
+          />
+
+          {/* Main line */}
+          <Path
+            path={path}
+            style="stroke"
+            strokeWidth={2.5}
+            color="#A20025"
+            opacity={0.7}
+          />
 
           {/* Draw data points */}
           {points.map((point, index) => (
-            <Circle
-              key={`point-${point.x}-${point.y}-${index}`}
-              cx={point.x}
-              cy={point.y}
-              r={4}
-              color="#007BFF"
-            />
+            <React.Fragment key={`point-${point.x}-${point.y}-${index}`}>
+              <Circle
+                // key={`point-${point.x}-${point.y}-${index}`}
+                cx={point.x}
+                cy={point.y}
+                r={4}
+                color="#fff"
+                style="stroke"
+                strokeWidth={2}
+                opacity={0.8}
+              />
+              <Circle
+                // key={`point-inner-${point.x}-${point.y}-${index}`}
+                cx={point.x}
+                cy={point.y}
+                r={2.5}
+                color="#A20025"
+                opacity={0.8}
+              />
+            </React.Fragment>
           ))}
         </Canvas>
+        {/* {selectedPoint && (
+          <View
+            style={{
+              position: 'absolute',
+              left: selectedPoint.x + 10,
+              top: selectedPoint.y,
+              backgroundColor: '#fff',
+              padding: 8,
+              borderRadius: 8,
+              borderColor: '#A20025',
+              borderWidth: 1,
+              elevation: 5,
+              zIndex: 100,
+            }}
+          >
+            <Text>Temp: {selectedPoint.temp}°C</Text>
+            <Text>Altitude: {selectedPoint.altitude}m</Text>
+            <Text
+              style={{ color: '#007BFF', marginTop: 4 }}
+              onPress={() => setSelectedPoint(null)}
+            >
+              Close
+            </Text>
+          </View>
+        )} */}
       </View>
     </>
   );
@@ -446,6 +544,57 @@ const styles = StyleSheet.create({
     color: '#007BFF', // Blue for emphasis
     fontWeight: 'bold',
     marginRight: -45,
+  },
+
+  inversionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    borderLeftWidth: 6,
+    borderLeftColor: '#A20025',
+  },
+  inversionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#A20025',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 8,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 6,
+  },
+  metricIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  metricLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#555',
+    marginLeft: 7,
+    marginTop: 5,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007BFF',
+  },
+  icon: {
+    width: 25,
+    height: 25,
   },
 });
 

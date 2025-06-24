@@ -6,6 +6,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 // import {Stack} from 'expo-router';
 import OptionHeader from '../components/optionHeader';
@@ -104,21 +105,6 @@ export default function DataScreen() {
     inversionData.inversionRate,
     inversionData.totalSamples,
   ]);
-  // // Update historical data when generalInfo changes
-  // useEffect(() => {
-  //   if (generalInfo.date && generalInfo.time) {
-  //     const newEntry = { ...generalInfo };
-  //     setHistoricalData(prevData => {
-  //       const isDuplicate = prevData.some(
-  //         entry => entry.date === newEntry.date && entry.time === newEntry.time,
-  //       );
-  //       if (isDuplicate) return prevData;
-  //       const updatedData = [newEntry, ...prevData];
-  //       return updatedData.slice(0, 20);
-  //     });
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [generalInfo.date, generalInfo.time]);
 
   useEffect(() => {
     initDB();
@@ -180,28 +166,59 @@ export default function DataScreen() {
           <View style={styles.infoContainer}>
             {/* <Text style={styles.infoTitle}>WeatherSonde Real-Time</Text> */}
             <View style={styles.infoCard}>
-              <Text style={styles.label}>🔢 Number of record:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-record-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}
+                Number of record:
+              </Text>
               <Text style={styles.value}>{generalInfo.totalSamples}</Text>
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>📅 Date:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-date-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}Date:
+              </Text>
               <Text style={styles.value}>{generalInfo.date}</Text>
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>🕒 Time:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-time-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}Time:
+              </Text>
               <Text style={styles.value}>{generalInfo.time}</Text>
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>⛰️ Altitude:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-altitude-color.png')}
+                  style={styles.icon}
+                />
+                {'   '}Altitude:
+              </Text>
               <Text style={styles.value}>
                 {generalInfo.altitude} {distanceUnit}
               </Text>
             </View>
             <View style={styles.infoCard}>
-              <Text style={styles.label}>🌤️ Air Temp:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-airTemp-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}Air Temp:
+              </Text>
               <Text style={styles.value}>
                 {generalInfo.airTemp !== null
                   ? parseFloat(generalInfo.airTemp.toString()).toFixed(2)
@@ -211,14 +228,33 @@ export default function DataScreen() {
             </View>
 
             <View style={styles.infoCard}>
-              <Text style={styles.label}>💦 Humidity:</Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-humidity-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}Humidity:
+              </Text>
               <Text style={styles.value}>{generalInfo.weatherRH}</Text>
             </View>
 
             <View style={styles.infoCardGroup}>
-              <Text style={styles.label}>🌪️ Inversion Data: </Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-inversion-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}Inversion Data:{' '}
+              </Text>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}🔥 Intensity: </Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-intensity-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}Intensity:{' '}
+                </Text>
                 <Text style={styles.value}>
                   {parseFloat(
                     generalInfo.inversionIntensity.toString(),
@@ -227,7 +263,14 @@ export default function DataScreen() {
                 </Text>
               </View>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}📏 Height:</Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-height-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}Height:
+                </Text>
                 <Text style={styles.value}>
                   {parseFloat(generalInfo.inversionHeight.toString()).toFixed(
                     3,
@@ -236,7 +279,14 @@ export default function DataScreen() {
                 </Text>
               </View>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}📉 Rate:</Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-rate-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}Rate:
+                </Text>
                 <Text style={styles.value}>
                   {parseFloat(generalInfo.inversionRate.toString()).toFixed(3)}{' '}
                   {'°C/m'}
@@ -244,9 +294,22 @@ export default function DataScreen() {
               </View>
             </View>
             <View style={styles.infoCardGroup}>
-              <Text style={styles.label}>🚁 WeatherSonde internal data: </Text>
+              <Text style={styles.label}>
+                <Image
+                  source={require('./../assets/images/icon-weathersonde-color.png')}
+                  style={styles.icon}
+                />
+                {'  '}WeatherSonde internal data:{' '}
+              </Text>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}🌡️ Temp: </Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-airTemp-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}Temp:{' '}
+                </Text>
                 <Text style={styles.value}>
                   {generalInfo.internalTemp !== null
                     ? parseFloat(generalInfo.internalTemp.toString()).toFixed(2)
@@ -255,11 +318,25 @@ export default function DataScreen() {
                 </Text>
               </View>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}💧 RH:</Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-humidity-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}RH:
+                </Text>
                 <Text style={styles.value}>{generalInfo.internalRH}</Text>
               </View>
               <View style={styles.infoGroup}>
-                <Text style={styles.label}>{'\t'}📊 Pressure:</Text>
+                <Text style={styles.label}>
+                  {'\t'}
+                  <Image
+                    source={require('./../assets/images/icon-pressure-color.png')}
+                    style={styles.icon}
+                  />
+                  {'  '}Pressure:
+                </Text>
                 <Text style={styles.value}>{generalInfo.internalPres}</Text>
               </View>
             </View>
@@ -462,5 +539,9 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  icon: {
+    width: 20,
+    height: 20,
   },
 });

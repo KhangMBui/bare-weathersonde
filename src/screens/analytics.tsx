@@ -10,7 +10,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { binByAltitude } from '../utils/binByAltitude';
 
 export default function AnalyticsScreen() {
-  const TEST_MODE = false;
+  const TEST_MODE = true;
   const predefined_records = useMemo(
     () => [
       { altitude: 0.5, temperature: 18.0, humidity: '85 %' },
