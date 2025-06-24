@@ -23,7 +23,8 @@ export default function AuthorsModal({
       animationType="slide"
       transparent={true}
       visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}>
+      onRequestClose={() => setModalVisible(false)}
+    >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Credits & Authors</Text>
@@ -70,14 +71,17 @@ export default function AuthorsModal({
           <View style={styles.logoContainer}>
             <Image
               source={require('./../assets/images/AGAID-logo.png')}
-              style={styles.agaidLogo}></Image>
+              style={styles.agaidLogo}
+            ></Image>
             <Image
               source={require('./../assets/images/AgWeather-logo.png')}
-              style={styles.agwnLogo}></Image>
+              style={styles.agwnLogo}
+            ></Image>
           </View>
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setModalVisible(false)}>
+            onPress={() => setModalVisible(false)}
+          >
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -89,10 +93,13 @@ export default function AuthorsModal({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Move content to the top
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 10, // Add some top padding for spacing
+    paddingBottom: 10, // Optional: add bottom padding to avoid overflow
   },
+  // ...existing code...
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -101,13 +108,14 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+    marginBottom: 0, // Add margin at the bottom to prevent overflow
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#A20025',
     marginBottom: 15,
@@ -123,7 +131,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -143,21 +151,21 @@ const styles = StyleSheet.create({
     // width: "100%",
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 5,
   },
   role: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#555',
     marginBottom: 5,
   },
   value: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   closeButton: {
     backgroundColor: '#A20025',

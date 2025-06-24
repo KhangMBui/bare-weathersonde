@@ -398,7 +398,6 @@ const LineGraph = ({
           {points.map((point, index) => (
             <React.Fragment key={`point-${point.x}-${point.y}-${index}`}>
               <Circle
-                // key={`point-${point.x}-${point.y}-${index}`}
                 cx={point.x}
                 cy={point.y}
                 r={4}
@@ -408,7 +407,6 @@ const LineGraph = ({
                 opacity={0.8}
               />
               <Circle
-                // key={`point-inner-${point.x}-${point.y}-${index}`}
                 cx={point.x}
                 cy={point.y}
                 r={2.5}

@@ -1,4 +1,4 @@
-import {View, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import React from 'react';
 
 interface Props {
@@ -7,7 +7,11 @@ interface Props {
   onTabChange: (tab: string) => void;
 }
 
-export default function OptionHeader({tabs, selectedTab, onTabChange}: Props) {
+export default function OptionHeader({
+  tabs,
+  selectedTab,
+  onTabChange,
+}: Props) {
   return (
     <View style={styles.tabContainer}>
       {tabs.map(tab => (
@@ -24,12 +28,12 @@ export default function OptionHeader({tabs, selectedTab, onTabChange}: Props) {
 
 const baseTab = {
   fontSize: 16,
-  paddingTop: 25,
+  paddingTop: 5,
   color: 'white',
 };
 const styles = StyleSheet.create({
   tabContainer: {
-    height: 60,
+    height: 40,
     backgroundColor: '#A60F2D',
     display: 'flex',
     flexDirection: 'row',

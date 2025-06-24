@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     marginTop: -15,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginTop: 10,
   },
@@ -210,17 +210,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
     textAlign: 'center',
     color: '#333',
     paddingTop: 10,
+    zIndex: 1000,
   },
   applyButton: {
     backgroundColor: '#A60F2D', // Dark red color
     borderRadius: 8, // Rounded corners
     paddingVertical: 12, // Vertical padding for better height
     paddingHorizontal: 20, // Horizontal padding for better width
-    marginTop: 20, // Add spacing from other elements
+    marginTop: 10, // Add spacing from other elements
     alignItems: 'center', // Center the button text
     justifyContent: 'center', // Center the button text
     shadowColor: '#000', // Add shadow for depth
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
   },
   applyButtonText: {
     color: '#fff', // White text for contrast
-    fontSize: 16, // Font size for readability
+    fontSize: 14, // Font size for readability
     fontWeight: 'bold', // Bold text for emphasis
   },
   sectionHeader: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#8B0000',
     marginTop: 20,
@@ -246,6 +246,9 @@ const styles = StyleSheet.create({
   dropdown: {
     marginTop: 5,
     marginBottom: 10,
+    height: 40,
+    minHeight: 32,
+    paddingVertical: 0,
   },
   dropdownContainer: {
     position: 'absolute',
@@ -275,13 +278,13 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     color: '#A60F2D',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginLeft: 8,
     textDecorationLine: 'underline',
   },
   logo: {
-    height: 25,
-    width: 25,
+    height: 20,
+    width: 20,
   },
 });

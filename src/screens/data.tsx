@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   infoContainer: {
-    marginTop: 70,
+    marginTop: 10,
     padding: 10,
   },
   // infoTitle: {

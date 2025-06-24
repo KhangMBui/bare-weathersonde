@@ -1,4 +1,4 @@
-import {StyleSheet, View, Text, Platform} from 'react-native';
+import { StyleSheet, View, Text, Platform } from 'react-native';
 
 export default function Header() {
   return (
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#A60F2D',
     width: '100%',
     // height: 100,
-    height: 60,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     // borderRadius: 10,
@@ -46,16 +46,16 @@ const styles = StyleSheet.create({
     // letterSpacing: 1,
     fontSize: 24,
     // marginTop: 16,
-    marginTop: 40,
+    marginTop: 14,
     color: '#ffffff',
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 2,
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: {width: 3, height: 3},
+    textShadowOffset: { width: 3, height: 3 },
     textShadowRadius: 4,
-    fontFamily: Platform.select({ios: 'Helvetica', android: 'sans-serif'}),
+    fontFamily: Platform.select({ ios: 'Helvetica', android: 'sans-serif' }),
   },
   logoContainer: {
     display: 'flex',

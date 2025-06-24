@@ -203,9 +203,9 @@ const styles = StyleSheet.create({
   /* Relocate button */
   button: {
     position: 'absolute',
-    top: 90,
+    top: 40,
     // left: "110%",
-    right: '-25%',
+    right: '-26%',
     transform: [{ translateX: -100 }],
     padding: 10,
     borderRadius: 5,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     bottom: 90,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(162, 0, 37, 0.8)', // dark red transparent
+    backgroundColor: 'rgba(162, 0, 37, 1)', // dark red transparent
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',

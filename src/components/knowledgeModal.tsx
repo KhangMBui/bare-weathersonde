@@ -22,7 +22,8 @@ export default function KnowledgeModal({
       animationType="slide"
       transparent={true}
       visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}>
+      onRequestClose={() => setModalVisible(false)}
+    >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Knowledge Center</Text>
@@ -66,7 +67,8 @@ export default function KnowledgeModal({
           </ScrollView>
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setModalVisible(false)}>
+            onPress={() => setModalVisible(false)}
+          >
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -77,25 +79,29 @@ export default function KnowledgeModal({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Move content to the top
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 40, // Add some top padding for spacing
+    paddingBottom: 10, // Optional: add bottom padding to avoid overflow
   },
+  // ...existing code...
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 20,
     width: '90%',
-    maxHeight: '80%', // Prevent overflow
+    maxHeight: '80%',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+    marginBottom: 0, // Add margin at the bottom to prevent overflow
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#A20025', // WSU Crimson
     marginBottom: 15,
@@ -111,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
