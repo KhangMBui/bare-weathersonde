@@ -1,32 +1,52 @@
-import {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import Footer from '../components/footer';
 import Header from '../components/header';
-import axios from 'axios';
-import {fetchWeatherApi} from 'openmeteo';
+import { useUsbSerial } from '../contexts/UsbDataContext';
+import { fetchWeatherApi } from 'openmeteo';
+import LinearGradient from 'react-native-linear-gradient';
+import { Platform, PermissionsAndroid } from 'react-native';
 
 export default function WeatherScreen() {
-  const [droneLocation, setDroneLocation] = useState({
-    latitude: 52.52,
-    longitude: 13.41,
+  const { data } = useUsbSerial();
+  const wsData = data?.WS_Data || {};
+  const latitude = wsData.latitude ?? 46.7297771;
+  const longitude = wsData.longitude ?? -117.1817377;
+  const [droneLocation] = useState({
+    latitude: latitude,
+    longitude: longitude,
   });
+
   const [weatherData, setWeatherData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRaining, setIsRaining] = useState(false);
 
-  // const getDroneInfo = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       'https://bb59-69-166-46-176.ngrok-free.app/ws_data',
-  //     );
-  //     const {latitude, longitude} = response.data;
-  //     setDroneLocation({latitude, longitude});
-  //   } catch (err) {
-  //     console.error('Error fetching drone location:', err);
-  //     setError('Failed to fetch drone location.');
+  function getTemperatureIcon(temp: number) {
+    if (isRaining) return require('../assets/images/icon-rain.png');
+    if (temp < 10) return require('../assets/images/icon-cold.png');
+    if (temp < 30) return require('../assets/images/icon-warm.png');
+    return require('../assets/images/icon-hot.png');
+  }
+
+  // function getGradientColors(temp: number) {
+  //   if (temp < 10) {
+  //     // Cold: blue tones
+  //     return ['#a1c4fd', '#c2e9fb', '#f8fafc'];
   //   }
-  // };
+  //   if (temp < 20) {
+  //     // Cool: teal/greenish
+  //     return ['#89f7fe', '#66a6ff', '#f8fafc'];
+  //   }
+  //   if (temp < 30) {
+  //     // Warm: orange/yellow
+  //     return ['#fbc2eb', '#fcd581', '#fffbe7'];
+  //   }
+  //   // Hot: red/orange
+  //   return ['#ff9966', '#ff5e62', '#fffbe7'];
+  // }
 
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   const fetchWeather = async (latitude: number, longitude: number) => {
     const params = {
       latitude: latitude,
@@ -37,6 +57,7 @@ export default function WeatherScreen() {
         'temperature_80m',
         'wind_speed_80m',
         'soil_temperature_0cm',
+        'rain',
       ],
     };
     const url = 'https://api.open-meteo.com/v1/forecast';
@@ -48,6 +69,7 @@ export default function WeatherScreen() {
       // Process weather data
       const utcOffsetSeconds = response.utcOffsetSeconds();
       const hourly = response.hourly()!;
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const weatherData = {
         hourly: {
           time: [
@@ -62,15 +84,28 @@ export default function WeatherScreen() {
                   i * hourly.interval() +
                   utcOffsetSeconds) *
                   1000,
-              ),
+              )
+                .toISOString()
+                .slice(0, 16), // "YYYY-MM-DDTHH:mm"
           ),
           relativeHumidity2m: hourly.variables(0)!.valuesArray()!,
           dewPoint2m: hourly.variables(1)!.valuesArray()!,
           temperature80m: hourly.variables(2)!.valuesArray()!,
           windSpeed80m: hourly.variables(3)!.valuesArray()!,
           soilTemperature0cm: hourly.variables(4)!.valuesArray()!,
+          rain: hourly.variables(5)!.valuesArray()!,
         },
       };
+
+      if (weatherData) {
+        const nowIso = new Date().toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+        const rainIndex = weatherData.hourly.time.findIndex(t => t === nowIso);
+        const rainNow =
+          rainIndex !== -1 && weatherData.hourly.rain
+            ? weatherData.hourly.rain[rainIndex]
+            : 0;
+        setIsRaining(rainNow > 0);
+      }
 
       setWeatherData(weatherData);
     } catch (err) {
@@ -79,20 +114,31 @@ export default function WeatherScreen() {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setLoading(true);
-  //     await getDroneInfo();
-  //     setLoading(false);
-  //   };
-  //   fetchData();
-  // }, []);
+  async function getCityName(lat: number, lon: number) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+      console.log('Weather URL: ', url);
+      const response = await fetch(url);
+      const data = await response.json();
+      // Try to get city, town, or village
+      return (
+        data.address.city ||
+        data.address.town ||
+        data.address.village ||
+        data.address.hamlet ||
+        data.address.state ||
+        data.address.postcode ||
+        'Unknown'
+      );
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
 
-  // useEffect(() => {
-  //   if (droneLocation.latitude && droneLocation.longitude) {
-  //     fetchWeather(droneLocation.latitude, droneLocation.longitude);
-  //   }
-  // }, [droneLocation]);
+  const [city, setCity] = useState<string>('Loading...');
+  useEffect(() => {
+    getCityName(droneLocation.latitude, droneLocation.longitude).then(setCity);
+  }, [droneLocation]);
 
   useEffect(() => {
     setLoading(true);
@@ -107,18 +153,42 @@ export default function WeatherScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading...</Text>
-      </View>
+      <LinearGradient
+        colors={['#e0eafc', '#cfdef3', '#fff']}
+        style={[
+          styles.gradientBg,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <ActivityIndicator size="large" color="#A20025" />
+        <Text
+          style={{
+            color: '#222',
+            fontSize: 18,
+            marginTop: 18,
+            fontWeight: '500',
+          }}
+        >
+          Loading weather...
+        </Text>
+      </LinearGradient>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.error}>{error}</Text>
-      </View>
+      <LinearGradient
+        colors={['#6db3f2', '#1e69de']}
+        style={[
+          styles.gradientBg,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <View style={styles.errorCard}>
+          <Text style={styles.errorTitle}>Oops!</Text>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      </LinearGradient>
     );
   }
 
@@ -130,128 +200,213 @@ export default function WeatherScreen() {
     }).format(date);
   };
 
+  const currentTemp = weatherData
+    ? parseFloat(weatherData.hourly.temperature80m[0])
+    : 20;
+
   return (
-    <View style={styles.root}>
+    // <LinearGradient
+    //   colors={getGradientColors(currentTemp)}
+    //   start={{ x: 0, y: 0 }}
+    //   end={{ x: 1, y: 1 }}
+    //   style={styles.gradientBg}
+    // >
+    <LinearGradient
+      colors={['#6db3f2', '#1e69de']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradientBg}
+    >
       <Header />
-      <Text style={styles.title}>Weather Information</Text>
-      <View style={styles.container}>
-        {weatherData ? (
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>📍 Location: </Text>
-              <Text style={styles.valueText}>
-                {droneLocation.latitude}, {droneLocation.longitude}
+      <View style={styles.centeredContainer}>
+        <View style={styles.weatherCard}>
+          <Text style={styles.cityText}>
+            {city} ({droneLocation.latitude.toFixed(4)},{' '}
+            {droneLocation.longitude.toFixed(4)})
+          </Text>
+          <Text style={styles.dateText}>
+            {formatTime(weatherData.hourly.time[0])}
+          </Text>
+          <Image
+            source={getTemperatureIcon(currentTemp)}
+            style={styles.weatherIcon}
+          />
+          <Text style={styles.tempMain}>
+            {parseFloat(weatherData.hourly.temperature80m[0]).toFixed(0)}° C
+          </Text>
+          {/* <Text
+            style={{
+              marginTop: 8,
+              fontSize: 16,
+              color: isRaining ? '#1e69de' : '#222',
+            }}
+          >
+            {isRaining ? '🌧️ It is raining now.' : '☀️ No rain right now.'}
+          </Text> */}
+          {/* <Text style={styles.weatherDesc}>Clear Sky</Text> */}
+          <View style={styles.divider} />
+          <View style={styles.metricsRow}>
+            <View style={styles.metricItem}>
+              <Image
+                source={require('./../assets/images/icon-wind.png')}
+                style={styles.metricIcon}
+              />
+              <Text style={styles.metricValue}>
+                {parseFloat(weatherData.hourly.windSpeed80m[0]).toFixed(1)} m/s
               </Text>
+              <Text style={styles.metricLabel}>Wind</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>🕒 Time:</Text>
-              <Text style={styles.valueText}>
-                {formatTime(weatherData.hourly.time[0])}
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>🌡️ Temperature (80 m):</Text>
-              <Text style={styles.valueText}>
-                {parseFloat(weatherData.hourly.temperature80m[0]).toFixed(2)}°C
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>💧 Relative Humidity (2 m):</Text>
-              <Text style={styles.valueText}>
+            <View style={styles.metricItem}>
+              <Image
+                source={require('./../assets/images/icon-humidity-color.png')}
+                style={styles.metricIcon}
+              />
+              <Text style={styles.metricValue}>
                 {weatherData.hourly.relativeHumidity2m[0]}%
               </Text>
+              <Text style={styles.metricLabel}>Humidity</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>❄️ Dew Point (2 m):</Text>
-              <Text style={styles.valueText}>
-                {parseFloat(weatherData.hourly.dewPoint2m[0]).toFixed(2)}°C
+            <View style={styles.metricItem}>
+              <Image
+                source={require('./../assets/images/icon-dewpoint.png')}
+                style={styles.metricIcon}
+              />
+              <Text style={styles.metricValue}>
+                {parseFloat(weatherData.hourly.dewPoint2m[0]).toFixed(1)}°C
               </Text>
+              <Text style={styles.metricLabel}>Dew Point</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>🌬️ Wind Speed (80 m):</Text>
-              <Text style={styles.valueText}>
-                {parseFloat(weatherData.hourly.windSpeed80m[0]).toFixed(2)} m/s
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.boldText}>🌱 Soil Temperature:</Text>
-              <Text style={styles.valueText}>
+            <View style={styles.metricItem}>
+              <Image
+                source={require('./../assets/images/icon-soil.png')}
+                style={styles.metricIcon}
+              />
+              <Text style={styles.metricValue}>
                 {parseFloat(weatherData.hourly.soilTemperature0cm[0]).toFixed(
-                  2,
+                  1,
                 )}
                 °C
               </Text>
+              <Text style={styles.metricLabel}>Soil Temp</Text>
             </View>
           </View>
-        ) : (
-          <Text>No weather data available.</Text>
-        )}
-        <Footer />
+        </View>
+        {/* You can add a forecast scroll here if you want */}
       </View>
-    </View>
+      <Footer />
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  gradientBg: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    paddingTop: 0,
   },
-  container: {
-    backgroundColor: '#f7f7f7',
+  centeredContainer: {
     flex: 1,
-    paddingTop: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: {
+  weatherCard: {
     backgroundColor: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#A20025', // WSU Crimson for a bold look
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 2,
-  },
-  card: {
-    padding: 16,
-    borderRadius: 10,
-    elevation: 3,
+    borderRadius: 28,
+    paddingVertical: 32,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    width: '90%',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    backgroundColor: '#fff',
-    marginBottom: 10,
+    shadowRadius: 16,
+    elevation: 8,
+    marginTop: -70,
   },
-  weatherText: {
-    fontSize: 16,
-    paddingVertical: 5,
-  },
-  info: {
+  cityText: {
     fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e69de',
+    marginBottom: 2,
+  },
+  dateText: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 12,
+  },
+  weatherIcon: {
+    width: 90,
+    height: 90,
+    marginBottom: 8,
+  },
+  tempMain: {
+    fontSize: 56,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 2,
+  },
+  weatherDesc: {
+    fontSize: 18,
+    color: '#1e69de',
+    marginBottom: 12,
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#e0eafc',
+    marginVertical: 16,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 0,
+    gap: 0,
+  },
+  metricItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  metricIcon: {
+    width: 32,
+    height: 32,
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 2,
+  },
+  metricLabel: {
+    fontSize: 13,
+    color: '#1e69de',
+    marginTop: 2,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  errorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingVertical: 32,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  errorTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1e69de',
     marginBottom: 10,
   },
   error: {
+    color: '#A20025',
     fontSize: 18,
-    color: 'red',
-  },
-  boldText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 5,
-  },
-  valueText: {
-    fontSize: 16,
-    textAlign: 'right',
-    color: '#007BFF',
-    // fontWeight: "bold",
+    textAlign: 'center',
   },
 });

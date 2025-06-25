@@ -15,6 +15,13 @@ import { StatusBar } from 'react-native';
 import 'react-native-url-polyfill/auto';
 import UsbSerialScreen from './src/screens/UsbSerialScreen';
 import { RecordingProvider } from './src/contexts/RecordingContext';
+import { TextDecoder, TextEncoder } from 'text-encoding';
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
 
 const Stack = createNativeStackNavigator();
 

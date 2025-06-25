@@ -47,7 +47,7 @@ export default function Footer() {
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.iconContainer]}
-        onPress={() => handlePress('UsbSerial')}
+        onPress={() => handlePress('Weather')}
       >
         {/* <MaterialIcons name="sunny-snowing" size={28} color="white" /> */}
         <Image

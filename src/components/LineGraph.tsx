@@ -202,20 +202,20 @@ const LineGraph = ({
     parseFloat(tick.toFixed(1)),
   ); // Format to 1 decimal place
 
-  function getSmoothPath(points: { x: number; y: number }[]) {
-    if (points.length < 2) return Skia.Path.Make();
-    const path = Skia.Path.Make();
+  // function getSmoothPath(points: { x: number; y: number }[]) {
+  //   if (points.length < 2) return Skia.Path.Make();
+  //   const path = Skia.Path.Make();
 
-    // For curvy line
-    path.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const cpx = (prev.x + curr.x) / 2;
-      path.cubicTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
-    }
-    return path;
-  }
+  //   // For curvy line
+  //   path.moveTo(points[0].x, points[0].y);
+  //   for (let i = 1; i < points.length; i++) {
+  //     const prev = points[i - 1];
+  //     const curr = points[i];
+  //     const cpx = (prev.x + curr.x) / 2;
+  //     path.cubicTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+  //   }
+  //   return path;
+  // }
 
   function getStraightPath(points: { x: number; y: number }[]) {
     if (points.length < 2) return Skia.Path.Make();
