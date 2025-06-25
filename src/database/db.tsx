@@ -101,6 +101,67 @@ export function fetchRecords(callback: (records: any[]) => void) {
   });
 }
 
+export function fetchRecordsByProject(
+  projectName: string,
+  experimentNumber: number,
+  callback: (records: any[]) => void,
+) {
+  const db = getDb();
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT * FROM records WHERE projectName = ? AND experimentNumber = ? ORDER BY id DESC`,
+      [projectName, experimentNumber],
+      (tx: any, result: any) => {
+        const records = [];
+        for (let i = 0; i < result.rows.length; i++) {
+          records.push(result.rows.item(i));
+        }
+        callback(records);
+      },
+      (err: any) => console.log('Fetch by project error:', err),
+    );
+  });
+}
+
+export function fetchUniqueProjectNames(callback: (names: string[]) => void) {
+  const db = getDb();
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT DISTINCT projectName FROM records ORDER BY projectName ASC`,
+      [],
+      (tx: any, result: any) => {
+        const names: string[] = [];
+        for (let i = 0; i < result.rows.length; i++) {
+          names.push(result.rows.item(i).projectName);
+        }
+        callback(names);
+      },
+      (err: any) => console.log('Fetch unique project names error:', err),
+    );
+  });
+}
+
+export function fetchExperimentNumbersForProject(
+  projectName: string,
+  callback: (numbers: number[]) => void,
+) {
+  const db = getDb();
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT DISTINCT experimentNumber FROM records WHERE projectName = ? ORDER BY experimentNumber ASC`,
+      [projectName],
+      (tx: any, result: any) => {
+        const numbers: number[] = [];
+        for (let i = 0; i < result.rows.length; i++) {
+          numbers.push(result.rows.item(i).experimentNumber);
+        }
+        callback(numbers);
+      },
+      (err: any) => console.log('Fetch experiment numbers error:', err),
+    );
+  });
+}
+
 export function clearRecords(callback?: () => void) {
   const db = getDb();
   db.transaction((tx: any) => {

@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 // import {Stack} from 'expo-router';
 import OptionHeader from '../components/optionHeader';
@@ -20,6 +21,7 @@ import { useRecording } from '../contexts/RecordingContext';
 import { exportDatabase } from '../hooks/useExportDatabase';
 import { calculateInversion } from '../utils/calculateInversion';
 import ProjectNamePrompt from '../components/projectNamePrompt';
+import FindRecordsModal from '../components/findRecordsModal';
 
 // Database
 import {
@@ -49,6 +51,13 @@ export default function DataScreen() {
   const [projectName, setProjectName] = useState<string | null>(null);
   const [experimentNumber, setExperimentNumber] = useState<number | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+
+  const [findModalVisible, setFindModalVisible] = useState(false);
+
+  const handleRecordsFound = (records: any[]) => {
+    setHistoricalData(records);
+    setSelectedTab('Historical');
+  };
 
   const handleStartRecording = () => {
     setShowPrompt(true);
@@ -394,19 +403,12 @@ export default function DataScreen() {
         ) : (
           <>
             {/* --- Records Button --- */}
-            <View style={styles.buttonContainer}>
+            <View style={styles.actionRow}>
               <TouchableOpacity
-                style={{
-                  backgroundColor: isRecording ? '#900C3F' : '#A60F2D',
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  borderRadius: 8,
-                  margin: 10,
-                  marginRight: 0,
-                  alignItems: 'center',
-                  width: '30%',
-                }}
-                // onPress={() => setIsRecording(prev => !prev)}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: isRecording ? '#900C3F' : '#A60F2D' },
+                ]}
                 onPress={() => {
                   if (isRecording) {
                     handleStopRecording();
@@ -415,53 +417,56 @@ export default function DataScreen() {
                   }
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                <Text style={styles.actionButtonText}>
                   {isRecording ? 'Stop Recording' : 'Records'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{
-                  backgroundColor: '#007BFF',
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  borderRadius: 8,
-                  margin: 10,
-                  alignItems: 'center',
-                  width: '30%',
-                }}
+                style={[styles.actionButton, { backgroundColor: '#007BFF' }]}
                 onPress={() => exportDatabase()}
               >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                  Export Database
-                </Text>
+                <Text style={styles.actionButtonText}>Export</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{
-                  backgroundColor: '#FF4136',
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  borderRadius: 8,
-                  marginLeft: 0,
-                  margin: 10,
-                  alignItems: 'center',
-                  width: '30%',
-                }}
+                style={[styles.actionButton, { backgroundColor: '#FF4136' }]}
                 onPress={() => {
-                  clearRecords(() => {
-                    setTotalSamples(0);
-                    setHistoricalData([]);
-                  });
+                  Alert.alert(
+                    'Confirm Clear',
+                    'Are you sure you want to erase the entire database? This action is not reversible.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Yes, Clear All',
+                        style: 'destructive',
+                        onPress: () => {
+                          clearRecords(() => {
+                            setTotalSamples(0);
+                            setHistoricalData([]);
+                          });
+                        },
+                      },
+                    ],
+                  );
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                  Clear Database
-                </Text>
+                <Text style={styles.actionButtonText}>Clear</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity
+              style={styles.findButton}
+              onPress={() => setFindModalVisible(true)}
+            >
+              <Text style={styles.findButtonText}>Find Records</Text>
+            </TouchableOpacity>
             <ProjectNamePrompt
               visible={showPrompt}
               onSubmit={handlePromptSubmit}
               onCancel={handlePromptCancel}
+            />
+            <FindRecordsModal
+              visible={findModalVisible}
+              onClose={() => setFindModalVisible(false)}
+              onRecordsFound={handleRecordsFound}
             />
             <ScrollView
               style={{ padding: 10 }}
@@ -604,5 +609,50 @@ const styles = StyleSheet.create({
   icon: {
     width: 20,
     height: 20,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 6,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  findButton: {
+    backgroundColor: '#28a745',
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+  },
+  findButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
+    letterSpacing: 0.5,
   },
 });
