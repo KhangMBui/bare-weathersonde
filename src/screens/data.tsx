@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Footer from '../components/footer';
 import {
@@ -18,6 +19,7 @@ import { useUsbSerial } from '../contexts/UsbDataContext';
 import { useRecording } from '../contexts/RecordingContext';
 import { exportDatabase } from '../hooks/useExportDatabase';
 import { calculateInversion } from '../utils/calculateInversion';
+import ProjectNamePrompt from '../components/projectNamePrompt';
 
 // Database
 import {
@@ -25,6 +27,7 @@ import {
   insertRecord,
   fetchRecords,
   clearRecords,
+  getNextExperimentNumber,
 } from '../database/db';
 
 export default function DataScreen() {
@@ -42,6 +45,37 @@ export default function DataScreen() {
   const { isRecording, setIsRecording } = useRecording();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [totalSamples, setTotalSamples] = useState(0);
+
+  const [projectName, setProjectName] = useState<string | null>(null);
+  const [experimentNumber, setExperimentNumber] = useState<number | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  const handleStartRecording = () => {
+    setShowPrompt(true);
+  };
+
+  const handlePromptSubmit = (name: string) => {
+    setShowPrompt(false);
+    if (!name) return;
+    getNextExperimentNumber(name, nextNum => {
+      console.log('Project name: ', name);
+      console.log('Experiment number: ', nextNum);
+      setProjectName(name);
+      setExperimentNumber(nextNum);
+      setIsRecording(true);
+    });
+  };
+
+  const handlePromptCancel = () => {
+    setShowPrompt(false);
+  };
+
+  // When user presses stop:
+  const handleStopRecording = () => {
+    setIsRecording(false);
+    setProjectName(null);
+    setExperimentNumber(null);
+  };
 
   const generalInfo = useMemo(() => {
     // Helper to extract and convert values safely
@@ -112,7 +146,13 @@ export default function DataScreen() {
 
   // When recording:
   useEffect(() => {
-    if (isRecording && generalInfo.date && generalInfo.time) {
+    if (
+      isRecording &&
+      generalInfo.date &&
+      generalInfo.time &&
+      projectName &&
+      experimentNumber
+    ) {
       fetchRecords(records => {
         const last = records[0];
         const round2 = (val: any) =>
@@ -131,7 +171,12 @@ export default function DataScreen() {
           inversionIntensity: round2(generalInfo.inversionIntensity),
           inversionHeight: round2(generalInfo.inversionHeight),
           inversionRate: round2(generalInfo.inversionRate),
+          projectName,
+          experimentNumber,
         };
+
+        console.log('Records: ', records);
+        console.log('New entry: ', newEntry);
 
         const isDuplicate =
           last && last.date === newEntry.date && last.time === newEntry.time;
@@ -144,8 +189,13 @@ export default function DataScreen() {
         }
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generalInfo, isRecording, setHistoricalData]);
+  }, [
+    experimentNumber,
+    generalInfo,
+    isRecording,
+    projectName,
+    setHistoricalData,
+  ]);
 
   useEffect(() => {
     if (selectedTab === 'Historical') {
@@ -356,7 +406,14 @@ export default function DataScreen() {
                   alignItems: 'center',
                   width: '30%',
                 }}
-                onPress={() => setIsRecording(prev => !prev)}
+                // onPress={() => setIsRecording(prev => !prev)}
+                onPress={() => {
+                  if (isRecording) {
+                    handleStopRecording();
+                  } else {
+                    handleStartRecording();
+                  }
+                }}
               >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>
                   {isRecording ? 'Stop Recording' : 'Records'}
@@ -401,7 +458,11 @@ export default function DataScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-
+            <ProjectNamePrompt
+              visible={showPrompt}
+              onSubmit={handlePromptSubmit}
+              onCancel={handlePromptCancel}
+            />
             <ScrollView
               style={{ padding: 10 }}
               contentContainerStyle={{ paddingBottom: 80 }}

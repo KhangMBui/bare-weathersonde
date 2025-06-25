@@ -26,7 +26,9 @@ export function initDB() {
         inversionIntensity TEXT,
         inversionHeight TEXT,
         inversionRate TEXT,
-        UNIQUE(date, time)
+        projectName TEXT,
+        experimentNumber INTEGER,
+        UNIQUE(date, time, projectName, experimentNumber)
       );
     `);
   });
@@ -34,10 +36,11 @@ export function initDB() {
 
 export function insertRecord(record: any, callback?: () => void) {
   const db = getDb();
+  console.log('Record: ', record);
   db.transaction((tx: any) => {
     tx.executeSql(
-      `INSERT OR IGNORE INTO records (date, time, altitude, internalTemp, internalRH, internalPres, airTemp, weatherRH, inversionIntensity, inversionHeight, inversionRate)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO records (date, time, altitude, internalTemp, internalRH, internalPres, airTemp, weatherRH, inversionIntensity, inversionHeight, inversionRate, projectName, experimentNumber)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         record.date,
         record.time,
@@ -50,9 +53,32 @@ export function insertRecord(record: any, callback?: () => void) {
         record.inversionIntensity,
         record.inversionHeight,
         record.inversionRate,
+        record.projectName,
+        record.experimentNumber,
       ],
       callback,
       (err: any) => console.log('Insert error:', err),
+    );
+  });
+}
+
+export function getNextExperimentNumber(
+  projectName: string,
+  callback: (nextNumber: number) => void,
+) {
+  const db = getDb();
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT MAX(experimentNumber) as maxNum FROM records WHERE projectName = ?`,
+      [projectName],
+      (tx: any, result: any) => {
+        const maxNum = result.rows.item(0).maxNum;
+        callback(maxNum ? maxNum + 1 : 1);
+      },
+      (err: any) => {
+        console.log('Experiment number fetch error:', err);
+        callback(1);
+      },
     );
   });
 }

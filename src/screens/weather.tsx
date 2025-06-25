@@ -5,7 +5,6 @@ import Header from '../components/header';
 import { useUsbSerial } from '../contexts/UsbDataContext';
 import { fetchWeatherApi } from 'openmeteo';
 import LinearGradient from 'react-native-linear-gradient';
-import { Platform, PermissionsAndroid } from 'react-native';
 
 export default function WeatherScreen() {
   const { data } = useUsbSerial();
