@@ -10,8 +10,9 @@ import {
 import DropDownPicker from 'react-native-dropdown-picker';
 import {
   fetchUniqueProjectNames,
-  fetchExperimentNumbersForProject,
+  // fetchExperimentNumbersForProject,
   fetchRecordsByProject,
+  fetchExperimentNumbersWithDateForProject,
 } from '../database/db';
 
 type FindRecordsModalProps = {
@@ -58,9 +59,12 @@ export default function FindRecordsModal({
   useEffect(() => {
     if (selectedProject) {
       setLoadingExperiments(true);
-      fetchExperimentNumbersForProject(selectedProject, nums => {
+      fetchExperimentNumbersWithDateForProject(selectedProject, items => {
         setExperimentNumberItems(
-          nums.map(num => ({ label: num.toString(), value: num })),
+          items.map(item => ({
+            label: `#${item.experimentNumber} — ${item.date} ${item.time}`,
+            value: item.experimentNumber,
+          })),
         );
         setLoadingExperiments(false);
       });

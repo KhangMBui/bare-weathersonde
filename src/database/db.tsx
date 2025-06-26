@@ -162,6 +162,38 @@ export function fetchExperimentNumbersForProject(
   });
 }
 
+export function fetchExperimentNumbersWithDateForProject(
+  projectName: string,
+  callback: (
+    items: { experimentNumber: number; date: string; time: string }[],
+  ) => void,
+) {
+  const db = getDb();
+  db.transaction((tx: any) => {
+    tx.executeSql(
+      `SELECT experimentNumber, MIN(date) as date, MIN(time) as time
+       FROM records
+       WHERE projectName = ?
+       GROUP BY experimentNumber
+       ORDER BY experimentNumber ASC`,
+      [projectName],
+      (tx: any, result: any) => {
+        const items: {
+          experimentNumber: number;
+          date: string;
+          time: string;
+        }[] = [];
+        for (let i = 0; i < result.rows.length; i++) {
+          items.push(result.rows.item(i));
+        }
+        callback(items);
+      },
+      (err: any) =>
+        console.log('Fetch experiment numbers with date error:', err),
+    );
+  });
+}
+
 export function clearRecords(callback?: () => void) {
   const db = getDb();
   db.transaction((tx: any) => {

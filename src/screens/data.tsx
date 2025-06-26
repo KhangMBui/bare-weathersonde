@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 6,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     elevation: 3,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     borderRadius: 12,
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
