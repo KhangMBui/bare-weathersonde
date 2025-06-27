@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Text,
   Platform,
-  Image,
 } from 'react-native';
 import {
   Canvas,
@@ -21,6 +20,8 @@ import {
 } from '@shopify/react-native-skia';
 import { calculateInversion } from '../utils/calculateInversion';
 import { useUsbSerial } from '../contexts/UsbDataContext';
+import InversionCard from './inversionCard';
+import { useHistoricalData } from '../contexts/HistoricalDataContext';
 
 const fontFamily = Platform.select({ ios: 'helvetia', default: 'sans-serif' });
 const font = matchFont({ fontFamily, fontSize: 12 });
@@ -46,15 +47,10 @@ const LineGraph = ({
   const loading = false;
   const { data: usbData } = useUsbSerial();
   const wsData = usbData?.WS_Data || {};
-  const inversionData = calculateInversion([wsData]);
-  // const [selectedPoint, setSelectedPoint] = React.useState<null | {
-  //   x: number;
-  //   y: number;
-  //   temp: number;
-  //   altitude: number;
-  // }>(null);
+  // const inversionData = calculateInversion([wsData]);
 
-  // console.log('LineGraph data:', data);
+  const { historicalData, setHistoricalData } = useHistoricalData();
+  const inversionData = calculateInversion(historicalData);
 
   if (loading) {
     return (
@@ -137,26 +133,33 @@ const LineGraph = ({
     isNaN(minX) ||
     isNaN(maxX) ||
     isNaN(minAltitude) ||
-    isNaN(maxAltitude)
-    // || maxX === minX ||
-    // maxAltitude === minAltitude
+    isNaN(maxAltitude) ||
+    maxX === minX ||
+    maxAltitude === minAltitude
   ) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>
-          Data error: invalid or zero axis values.
+          {maxX === minX || maxAltitude === minAltitude
+            ? 'Cannot display graph: all values on an axis are identical'
+            : 'Data error: invalid axis values.'}
         </Text>
       </View>
     );
   }
 
   const points = sortedData
-    .map(item => ({
-      x: 50 + ((item[xAxisDataKey] - minX) / (maxX - minX)) * 300,
-      y:
-        300 -
-        ((item.altitude - minAltitude) / (maxAltitude - minAltitude)) * 250,
-    }))
+    .map(item => {
+      // Avoid division by zero
+      const xNormalizer = maxX === minX ? 1 : maxX - minX;
+      const yNormalizer =
+        maxAltitude === minAltitude ? 1 : maxAltitude - minAltitude;
+
+      return {
+        x: 50 + ((item[xAxisDataKey] - minX) / xNormalizer) * 300,
+        y: 300 - ((item.altitude - minAltitude) / yNormalizer) * 250,
+      };
+    })
     .filter(
       p =>
         typeof p.x === 'number' &&
@@ -229,57 +232,17 @@ const LineGraph = ({
 
   return (
     <>
-      <View style={styles.inversionCard}>
-        <Text style={styles.inversionTitle}>
-          <Image
-            source={require('./../assets/images/icon-inversion-color.png')}
-            style={styles.icon}
-          />{' '}
-          Inversion Data
-        </Text>
-
-        <View style={styles.divider} />
-        <View style={styles.metricRow}>
-          <Image
-            source={require('./../assets/images/icon-intensity-color.png')}
-            style={styles.icon}
-          />
-          <Text style={styles.metricLabel}>Intensity</Text>
-          <Text style={styles.metricValue}>
-            {inversionData.inversionIntensity.toFixed(3)} °C
-          </Text>
-        </View>
-        <View style={styles.metricRow}>
-          <Image
-            source={require('./../assets/images/icon-height-color.png')}
-            style={styles.icon}
-          />
-          <Text style={styles.metricLabel}>Height</Text>
-          <Text style={styles.metricValue}>
-            {inversionData.inversionHeight.toFixed(3)} m
-          </Text>
-        </View>
-        <View style={styles.metricRow}>
-          <Image
-            source={require('./../assets/images/icon-rate-color.png')}
-            style={styles.icon}
-          />
-          <Text style={styles.metricLabel}>Rate</Text>
-          <Text style={styles.metricValue}>
-            {inversionData.inversionRate.toFixed(3)} °C/m
-          </Text>
-        </View>
-      </View>
+      <InversionCard inversionData={inversionData} />
       {/* <View style={{ padding: 10, backgroundColor: '#eee', margin: 10 }}>
         <Text style={{ fontSize: 12, color: '#333' }}>
           sortedData: {JSON.stringify(sortedData, null, 2)}
         </Text>
       </View> */}
-      <Text style={styles.title}>
+      {/* <Text style={styles.title}>
         {selectedTab === 'Altitude - Temperature'
           ? 'Inversion Graph'
           : 'Humidity Graph'}
-      </Text>
+      </Text> */}
       <View style={styles.graphContainer}>
         <Canvas style={styles.canvas}>
           {/* Draw x-axis */}

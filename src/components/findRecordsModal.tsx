@@ -19,12 +19,14 @@ type FindRecordsModalProps = {
   visible: boolean;
   onClose: () => void;
   onRecordsFound: (records: any[]) => void;
+  isGeneratingGraph: boolean;
 };
 
 export default function FindRecordsModal({
   visible,
   onClose,
   onRecordsFound,
+  isGeneratingGraph = false,
 }: FindRecordsModalProps) {
   const [projectNameItems, setProjectNameItems] = useState<
     { label: string; value: string }[]
@@ -96,7 +98,9 @@ export default function FindRecordsModal({
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.title}>Find Records</Text>
+          <Text style={styles.title}>
+            {isGeneratingGraph ? 'Generate Graph with Record' : 'Find Records'}
+          </Text>
           <Text style={styles.label}>Project Name:</Text>
           {loadingProjects ? (
             <ActivityIndicator />
@@ -138,17 +142,19 @@ export default function FindRecordsModal({
           )}
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#A60F2D' }]}
+              style={[styles.button, { backgroundColor: '#6E6E6E' }]}
               onPress={onClose}
             >
               <Text style={[styles.buttonText, { color: '#fff' }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#1e69de' }]}
+              style={[styles.button, { backgroundColor: '#A60F2D' }]}
               onPress={handleFind}
               disabled={!selectedProject || selectedExperiment === null}
             >
-              <Text style={[styles.buttonText, { color: '#fff' }]}>Find</Text>
+              <Text style={[styles.buttonText, { color: '#fff' }]}>
+                {isGeneratingGraph ? 'Generate' : 'Find'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

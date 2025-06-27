@@ -13,12 +13,13 @@ type BinnedResult = {
 export function binByAltitude(
   records: Record[],
   binSize: number = 2,
-  selectedTab: string,
+  selectedTab: string, // Keep this parameter for backward compatibility
 ): BinnedResult[] {
   const altitudeBins: {
     [bin: string]: { temperatures: number[]; humidities: number[] };
   } = {};
 
+  // Bin the data (same as before)
   for (const record of records) {
     const { altitude, temperature, humidity } = record;
     if (
@@ -38,24 +39,20 @@ export function binByAltitude(
     }
   }
 
-  // Only calculate the average for the selected tab
+  // Calculate BOTH averages for each bin, regardless of tab
   return Object.entries(altitudeBins).map(([binLabel, binData]) => {
-    if (selectedTab === 'Altitude - Temperature') {
-      return {
-        altitude_bin: binLabel,
-        average_temperature:
-          binData.temperatures.reduce((a, b) => a + b, 0) /
-          binData.temperatures.length,
-        average_humidity: NaN, // Not needed for this tab
-      };
-    } else {
-      return {
-        altitude_bin: binLabel,
-        average_temperature: NaN, // Not needed for this tab
-        average_humidity:
-          binData.humidities.reduce((a, b) => a + b, 0) /
-          binData.humidities.length,
-      };
-    }
+    return {
+      altitude_bin: binLabel,
+      average_temperature:
+        binData.temperatures.length > 0
+          ? binData.temperatures.reduce((a, b) => a + b, 0) /
+            binData.temperatures.length
+          : 0,
+      average_humidity:
+        binData.humidities.length > 0
+          ? binData.humidities.reduce((a, b) => a + b, 0) /
+            binData.humidities.length
+          : 0,
+    };
   });
 }

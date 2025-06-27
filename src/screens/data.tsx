@@ -402,62 +402,6 @@ export default function DataScreen() {
           </View>
         ) : (
           <>
-            {/* --- Records Button --- */}
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: isRecording ? '#900C3F' : '#A60F2D' },
-                ]}
-                onPress={() => {
-                  if (isRecording) {
-                    handleStopRecording();
-                  } else {
-                    handleStartRecording();
-                  }
-                }}
-              >
-                <Text style={styles.actionButtonText}>
-                  {isRecording ? 'Stop Recording' : 'Records'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: '#007BFF' }]}
-                onPress={() => exportDatabase()}
-              >
-                <Text style={styles.actionButtonText}>Export</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: '#FF4136' }]}
-                onPress={() => {
-                  Alert.alert(
-                    'Confirm Clear',
-                    'Are you sure you want to erase the entire database? This action is not reversible.',
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Yes, Clear All',
-                        style: 'destructive',
-                        onPress: () => {
-                          clearRecords(() => {
-                            setTotalSamples(0);
-                            setHistoricalData([]);
-                          });
-                        },
-                      },
-                    ],
-                  );
-                }}
-              >
-                <Text style={styles.actionButtonText}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={styles.findButton}
-              onPress={() => setFindModalVisible(true)}
-            >
-              <Text style={styles.findButtonText}>Find Records</Text>
-            </TouchableOpacity>
             <ProjectNamePrompt
               visible={showPrompt}
               onSubmit={handlePromptSubmit}
@@ -467,6 +411,7 @@ export default function DataScreen() {
               visible={findModalVisible}
               onClose={() => setFindModalVisible(false)}
               onRecordsFound={handleRecordsFound}
+              isGeneratingGraph={false}
             />
             <ScrollView
               style={{ padding: 10 }}
@@ -529,6 +474,64 @@ export default function DataScreen() {
                 );
               })}
             </ScrollView>
+            {/* --- Records Button --- */}
+            <View style={styles.buttonContainer}>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: isRecording ? '#DE6A6A' : '#EA4C4C' },
+                  ]}
+                  onPress={() => {
+                    if (isRecording) {
+                      handleStopRecording();
+                    } else {
+                      handleStartRecording();
+                    }
+                  }}
+                >
+                  <Text style={styles.actionButtonText}>
+                    {isRecording ? 'Stop Recording' : 'Records'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: '#E6A94A' }]}
+                  onPress={() => exportDatabase()}
+                >
+                  <Text style={styles.actionButtonText}>Export</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: '#3D4D3D' }]}
+                  onPress={() => {
+                    Alert.alert(
+                      'Confirm Clear',
+                      'Are you sure you want to erase the entire database? This action is not reversible.',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Yes, Clear All',
+                          style: 'destructive',
+                          onPress: () => {
+                            clearRecords(() => {
+                              setTotalSamples(0);
+                              setHistoricalData([]);
+                            });
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                >
+                  <Text style={styles.actionButtonText}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.findButton}
+                onPress={() => setFindModalVisible(true)}
+              >
+                <Text style={styles.findButtonText}>Find Records</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
         <Footer />
@@ -602,9 +605,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   buttonContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingTop: 8,
+    paddingBottom: 8,
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    marginBottom: 60,
   },
   icon: {
     width: 20,
@@ -614,8 +621,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
   },
   actionButton: {
     flex: 1,
@@ -636,7 +641,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   findButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#A60F2D',
     marginHorizontal: 16,
     marginTop: 10,
     marginBottom: 18,

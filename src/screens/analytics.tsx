@@ -1,16 +1,25 @@
+/* eslint-disable react-native/no-inline-styles */
 /**
  * @jest-environment @shopify/react-native-skia/jestEnv.mjs
  */
 import Footer from '../components/footer';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import LineGraph from '../components/LineGraph';
 import OptionHeader from '../components/optionHeader';
 import { useHistoricalData } from '../contexts/HistoricalDataContext';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { binByAltitude } from '../utils/binByAltitude';
+import FindRecordsModal from '../components/findRecordsModal';
+import { importPredefinedRecords } from '../utils/importPredefinedRecords';
 
 export default function AnalyticsScreen() {
-  const TEST_MODE = true;
+  const TEST_MODE = false;
   const predefined_records = useMemo(
     () => [
       { altitude: 0.5, temperature: 18.0, humidity: '85 %' },
@@ -117,6 +126,21 @@ export default function AnalyticsScreen() {
     }
   }, [TEST_MODE, setHistoricalData]);
 
+  const [findModalVisible, setFindModalVisible] = useState(false);
+  const [
+    selectedProject,
+    // setSelectedProject
+  ] = useState<string | null>(null);
+  const [
+    selectedExperiment,
+    // setSelectedExperiment
+  ] = useState<number | null>(null);
+
+  const handleRecordsFound = (records: any[]) => {
+    setHistoricalData(records);
+    setFindModalVisible(false);
+  };
+
   return (
     <View style={styles.mainContainer}>
       {/* <Header /> */}
@@ -127,8 +151,40 @@ export default function AnalyticsScreen() {
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         {/* <Text>{JSON.stringify(historicalData, null, 2)}</Text> */}
+        <FindRecordsModal
+          visible={findModalVisible}
+          onClose={() => setFindModalVisible(false)}
+          onRecordsFound={handleRecordsFound}
+          isGeneratingGraph={true}
+        />
+        {selectedProject && selectedExperiment !== null && (
+          <Text
+            style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 8 }}
+          >
+            Project: {selectedProject} — Experiment: {selectedExperiment}
+          </Text>
+        )}
         <LineGraph selectedTab={selectedTab} data={binnedData} />
       </ScrollView>
+      {/* Button container at bottom */}
+      <View style={styles.buttonContainer}>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.findButton, { backgroundColor: '#A60F2D' }]}
+            onPress={() => setFindModalVisible(true)}
+          >
+            <Text style={styles.findButtonText}>Generate Graph</Text>
+          </TouchableOpacity>
+
+          {/* Import Test Data Button */}
+          <TouchableOpacity
+            style={[styles.findButton, { backgroundColor: '#3D4D3D' }]}
+            onPress={() => importPredefinedRecords(predefined_records)}
+          >
+            <Text style={styles.findButtonText}>Import Test Data</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <Footer />
     </View>
   );
@@ -138,5 +194,41 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+    padding: 10,
+  },
+  buttonContainer: {
+    backgroundColor: '#fff',
+    paddingTop: 8,
+    paddingBottom: 8,
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    marginBottom: 80,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+  },
+  findButton: {
+    flex: 1,
+    marginHorizontal: 6,
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingVertical: 14,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+  },
+  findButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16, // Slightly smaller for better fit
+    letterSpacing: 0.5,
   },
 });
