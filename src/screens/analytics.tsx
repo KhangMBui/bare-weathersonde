@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 /**
  * @jest-environment @shopify/react-native-skia/jestEnv.mjs
  */
@@ -9,14 +8,17 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import LineGraph from '../components/LineGraph';
 import OptionHeader from '../components/optionHeader';
 import { useHistoricalData } from '../contexts/HistoricalDataContext';
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { binByAltitude } from '../utils/binByAltitude';
 import FindRecordsModal from '../components/findRecordsModal';
 import { importPredefinedRecords } from '../utils/importPredefinedRecords';
+import { debounce } from '../utils/debounce';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function AnalyticsScreen() {
   const TEST_MODE = false;
@@ -141,36 +143,77 @@ export default function AnalyticsScreen() {
     setFindModalVisible(false);
   };
 
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const handleTabChange = useCallback(
+    (newTab: string) => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setSelectedTab(newTab);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 200); // Short delay after tab change
+      }, 300); // Delay before tab change
+    },
+    [setSelectedTab, setIsTransitioning],
+  );
+
+  const debouncedTabChange = useMemo(
+    () =>
+      debounce((newTab: string) => {
+        handleTabChange(newTab);
+      }, 300),
+    [handleTabChange],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debouncedTabChange.cancel) {
+        debouncedTabChange.cancel();
+      }
+    };
+  }, [debouncedTabChange]);
+
   return (
     <View style={styles.mainContainer}>
       {/* <Header /> */}
       <OptionHeader
         tabs={['Altitude - Temperature', 'Altitude - Humidity']}
         selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
+        onTabChange={debouncedTabChange}
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-        {/* <Text>{JSON.stringify(historicalData, null, 2)}</Text> */}
-        <FindRecordsModal
-          visible={findModalVisible}
-          onClose={() => setFindModalVisible(false)}
-          onRecordsFound={handleRecordsFound}
-          isGeneratingGraph={true}
-        />
-        {selectedProject && selectedExperiment !== null && (
-          <Text
-            style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 8 }}
-          >
-            Project: {selectedProject} — Experiment: {selectedExperiment}
-          </Text>
-        )}
-        <LineGraph selectedTab={selectedTab} data={binnedData} />
-      </ScrollView>
+      {/* Show loading indicator during transitions */}
+      {isTransitioning ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#A20025" />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <FindRecordsModal
+            visible={findModalVisible}
+            onClose={() => setFindModalVisible(false)}
+            onRecordsFound={handleRecordsFound}
+            isGeneratingGraph={true}
+          />
+          {selectedProject && selectedExperiment !== null && (
+            <Text style={styles.projectExperimentText}>
+              Project: {selectedProject} — Experiment: {selectedExperiment}
+            </Text>
+          )}
+          <ErrorBoundary>
+            <LineGraph
+              key={selectedTab + '-' + Date.now()}
+              selectedTab={selectedTab}
+              data={binnedData}
+            />
+          </ErrorBoundary>
+        </ScrollView>
+      )}
       {/* Button container at bottom */}
       <View style={styles.buttonContainer}>
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.findButton, { backgroundColor: '#A60F2D' }]}
+            style={[styles.findButton, styles.generateGraphButton]}
             onPress={() => setFindModalVisible(true)}
           >
             <Text style={styles.findButtonText}>Generate Graph</Text>
@@ -178,7 +221,7 @@ export default function AnalyticsScreen() {
 
           {/* Import Test Data Button */}
           <TouchableOpacity
-            style={[styles.findButton, { backgroundColor: '#3D4D3D' }]}
+            style={[styles.findButton, styles.importTestDataButton]}
             onPress={() => importPredefinedRecords(predefined_records)}
           >
             <Text style={styles.findButtonText}>Import Test Data</Text>
@@ -198,6 +241,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 10,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
   },
   buttonContainer: {
     backgroundColor: '#fff',
@@ -230,5 +276,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16, // Slightly smaller for better fit
     letterSpacing: 0.5,
+  },
+  importTestDataButton: {
+    backgroundColor: '#3D4D3D',
+  },
+  generateGraphButton: {
+    backgroundColor: '#A60F2D',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  projectExperimentText: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
 });

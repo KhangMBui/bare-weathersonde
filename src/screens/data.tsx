@@ -1,5 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import Footer from '../components/footer';
 import {
   View,
@@ -10,7 +8,6 @@ import {
   Image,
   Alert,
 } from 'react-native';
-// import {Stack} from 'expo-router';
 import OptionHeader from '../components/optionHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { useUnitConversion } from '../hooks/useUnitConversion';
@@ -414,11 +411,11 @@ export default function DataScreen() {
               isGeneratingGraph={false}
             />
             <ScrollView
-              style={{ padding: 10 }}
-              contentContainerStyle={{ paddingBottom: 80 }}
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollViewContent}
             >
               {/* <Text style={styles.infoTitle}>WeatherSonde Historical</Text> */}
-              {historicalData.map((item, index) => {
+              {historicalData.map(item => {
                 const uniqueId = `${item.date}-${item.time}`; // Create a unique identifier for each item
                 return (
                   <View key={uniqueId} style={styles.infoCard}>
@@ -480,7 +477,9 @@ export default function DataScreen() {
                 <TouchableOpacity
                   style={[
                     styles.actionButton,
-                    { backgroundColor: isRecording ? '#DE6A6A' : '#EA4C4C' },
+                    isRecording
+                      ? styles.actionButtonRecording
+                      : styles.actionButtonIdle,
                   ]}
                   onPress={() => {
                     if (isRecording) {
@@ -495,13 +494,13 @@ export default function DataScreen() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#E6A94A' }]}
+                  style={[styles.actionButton, styles.exportButton]}
                   onPress={() => exportDatabase()}
                 >
                   <Text style={styles.actionButtonText}>Export</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: '#3D4D3D' }]}
+                  style={[styles.actionButton, styles.clearButton]}
                   onPress={() => {
                     Alert.alert(
                       'Confirm Clear',
@@ -659,5 +658,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 17,
     letterSpacing: 0.5,
+  },
+  exportButton: {
+    backgroundColor: '#E6A94A',
+  },
+  clearButton: {
+    backgroundColor: '#3D4D3D',
+  },
+  actionButtonRecording: {
+    backgroundColor: '#DE6A6A',
+  },
+  actionButtonIdle: {
+    backgroundColor: '#EA4C4C',
+  },
+  scrollView: {
+    padding: 10,
+  },
+  scrollViewContent: {
+    paddingBottom: 80,
   },
 });

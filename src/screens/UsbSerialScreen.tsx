@@ -11,30 +11,29 @@ import {
 } from 'react-native';
 
 // --- Static test data ---
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const staticData = {
-  WS_Node: {
-    WS_ID: 'ws0001',
-    SNR: '100dbm',
-    Bat_Volt: '4.1V',
-    Bat_SOC: '89%',
-    DC_CHG: 'CHG / NA',
-  },
-  WS_Data: {
-    Date: '10/31/2024',
-    Time: '14:40:49',
-    latitude: 46.911334,
-    longitude: -119.742122,
-    altitude: '15.3 m',
-    Internal_Temp: '25 °C',
-    Internal_RH: '34%',
-    Internal_Pres: '7 kPa',
-    Weather: {
-      Air_Temperature: '25 °C',
-      RH: '45%',
-    },
-  },
-};
+// const staticData = {
+//   WS_Node: {
+//     WS_ID: 'ws0001',
+//     SNR: '100dbm',
+//     Bat_Volt: '4.1V',
+//     Bat_SOC: '89%',
+//     DC_CHG: 'CHG / NA',
+//   },
+//   WS_Data: {
+//     Date: '10/31/2024',
+//     Time: '14:40:49',
+//     latitude: 46.911334,
+//     longitude: -119.742122,
+//     altitude: '15.3 m',
+//     Internal_Temp: '25 °C',
+//     Internal_RH: '34%',
+//     Internal_Pres: '7 kPa',
+//     Weather: {
+//       Air_Temperature: '25 °C',
+//       RH: '45%',
+//     },
+//   },
+// };
 
 const { UsbSerial } = NativeModules;
 

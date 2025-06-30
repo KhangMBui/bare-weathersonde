@@ -101,7 +101,7 @@ export default function HomeScreen() {
     async function requestLocationPermission() {
       if (Platform.OS === 'android') {
         try {
-          const granted = await PermissionsAndroid.request(
+          await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             {
               title: 'Location Permission',
@@ -125,7 +125,7 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#A60F2D' }}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.mainContainer}>
         <Header />
         <MapView
@@ -139,12 +139,12 @@ export default function HomeScreen() {
           followsUserLocation={false} // Don't follow device
         >
           {/* Custom marker to act like "user location" */}
-          <Marker coordinate={{ latitude, longitude }} style={{ zIndex: 999 }}>
+          <Marker coordinate={{ latitude, longitude }}>
             {/* Alternate styles depending on likings: blue dot & drone icon */}
             {/* <View style={styles.fakeUserDotOuter}>
             <View style={styles.fakeUserDotInner} />
           </View> */}
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <View style={styles.centeredView}>
               <Image
                 source={require('./../assets/images/droneicon.png')}
                 style={styles.droneLogo}
@@ -190,6 +190,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  /* SafeArea */
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#A60F2D',
+  },
   /* Map */
   mainContainer: {
     // backgroundColor: '#A60F2D',
@@ -250,6 +255,10 @@ const styles = StyleSheet.create({
   locationLogo: {
     height: 25,
     width: 25,
+  },
+  centeredView: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // fakeUserDotOuter: {
   //   height: 24,

@@ -116,17 +116,16 @@ export default function WeatherScreen() {
   async function getCityName(lat: number, lon: number) {
     try {
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      console.log('Weather URL: ', url);
       const response = await fetch(url);
-      const data = await response.json();
+      const weatherLocationData = await response.json();
       // Try to get city, town, or village
       return (
-        data.address.city ||
-        data.address.town ||
-        data.address.village ||
-        data.address.hamlet ||
-        data.address.state ||
-        data.address.postcode ||
+        weatherLocationData.address.city ||
+        weatherLocationData.address.town ||
+        weatherLocationData.address.village ||
+        weatherLocationData.address.hamlet ||
+        weatherLocationData.address.state ||
+        weatherLocationData.address.postcode ||
         'Unknown'
       );
     } catch (e) {
@@ -154,22 +153,10 @@ export default function WeatherScreen() {
     return (
       <LinearGradient
         colors={['#e0eafc', '#cfdef3', '#fff']}
-        style={[
-          styles.gradientBg,
-          { justifyContent: 'center', alignItems: 'center' },
-        ]}
+        style={[styles.gradientBg, styles.centeredContent]}
       >
         <ActivityIndicator size="large" color="#A20025" />
-        <Text
-          style={{
-            color: '#222',
-            fontSize: 18,
-            marginTop: 18,
-            fontWeight: '500',
-          }}
-        >
-          Loading weather...
-        </Text>
+        <Text style={styles.loadingText}>Loading weather...</Text>
       </LinearGradient>
     );
   }
@@ -178,10 +165,7 @@ export default function WeatherScreen() {
     return (
       <LinearGradient
         colors={['#6db3f2', '#1e69de']}
-        style={[
-          styles.gradientBg,
-          { justifyContent: 'center', alignItems: 'center' },
-        ]}
+        style={[styles.gradientBg, styles.centeredContent]}
       >
         <View style={styles.errorCard}>
           <Text style={styles.errorTitle}>Oops!</Text>
@@ -302,6 +286,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
+  centeredContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   centeredContainer: {
     flex: 1,
     display: 'flex',
@@ -407,5 +395,11 @@ const styles = StyleSheet.create({
     color: '#A20025',
     fontSize: 18,
     textAlign: 'center',
+  },
+  loadingText: {
+    color: '#222',
+    fontSize: 18,
+    marginTop: 18,
+    fontWeight: '500',
   },
 });

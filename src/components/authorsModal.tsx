@@ -72,11 +72,11 @@ export default function AuthorsModal({
             <Image
               source={require('./../assets/images/AGAID-logo.png')}
               style={styles.agaidLogo}
-            ></Image>
+            />
             <Image
               source={require('./../assets/images/AgWeather-logo.png')}
               style={styles.agwnLogo}
-            ></Image>
+            />
           </View>
           <TouchableOpacity
             style={styles.closeButton}

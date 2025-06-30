@@ -82,7 +82,7 @@ const UsbReader: React.FC = () => {
               data: trimmedLine,
             },
           ]);
-          setRawDataCount(prev => prev + 1);
+          setRawDataCount(count => count + 1);
         }
       });
 
@@ -95,7 +95,7 @@ const UsbReader: React.FC = () => {
             data: remaining,
           },
         ]);
-        setRawDataCount(prev => prev + 1);
+        setRawDataCount(count => count + 1);
         return ''; // Clear buffer
       }
 

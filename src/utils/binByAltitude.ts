@@ -13,7 +13,8 @@ type BinnedResult = {
 export function binByAltitude(
   records: Record[],
   binSize: number = 2,
-  selectedTab: string, // Keep this parameter for backward compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  selectedTab: string,
 ): BinnedResult[] {
   const altitudeBins: {
     [bin: string]: { temperatures: number[]; humidities: number[] };

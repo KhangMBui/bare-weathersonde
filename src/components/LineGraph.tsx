@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,7 +19,6 @@ import {
   LinearGradient,
 } from '@shopify/react-native-skia';
 import { calculateInversion } from '../utils/calculateInversion';
-import { useUsbSerial } from '../contexts/UsbDataContext';
 import InversionCard from './inversionCard';
 import { useHistoricalData } from '../contexts/HistoricalDataContext';
 
@@ -43,14 +42,189 @@ const LineGraph = ({
   selectedTab: string;
   data?: any[];
 }) => {
-  const data = propData || [];
+  const isProduction = !__DEV__;
+  const pointSize = isProduction ? 3 : 4;
+  const pointOpacity = isProduction ? 0.7 : 0.8;
+  const showShadows = !isProduction;
+
+  // const [renderPhase, setRenderPhase] = useState(0);
+
+  // useEffect(() => {
+  //   setRenderPhase(0);
+  //   const timers = [
+  //     setTimeout(() => setRenderPhase(1), 50), // Axes and background
+  //     setTimeout(() => setRenderPhase(2), 100), // Ticks and labels
+  //     setTimeout(() => setRenderPhase(3), 150), // Fill and line
+  //     setTimeout(() => setRenderPhase(4), 200), // Points
+  //   ];
+  //   return () => timers.forEach(clearTimeout);
+  // }, [selectedTab, minX, maxX, minAltitude, maxAltitude]);
+
+  const data = useMemo(() => propData || [], [propData]);
   const loading = false;
-  const { data: usbData } = useUsbSerial();
-  const wsData = usbData?.WS_Data || {};
+  // const { data: usbData } = useUsbSerial();
+  // const wsData = usbData?.WS_Data || {};
   // const inversionData = calculateInversion([wsData]);
 
-  const { historicalData, setHistoricalData } = useHistoricalData();
+  const { historicalData } = useHistoricalData();
   const inversionData = calculateInversion(historicalData);
+
+  const xAxisLabel =
+    selectedTab === 'Altitude - Temperature'
+      ? 'Temperature (°C)'
+      : 'Humidity (%)';
+  const xAxisDataKey =
+    selectedTab === 'Altitude - Temperature'
+      ? 'average_temperature'
+      : 'average_humidity';
+
+  // Sort data by altitude
+  // const sortedData = data
+  //   .filter(item => item[xAxisDataKey] !== null && item.altitude !== null) // Filter out invalid data
+  //   .sort((a, b) => a.altitude - b.altitude); // Sort by altitude
+  // Use useMemo for all expensive calculations
+  const {
+    sortedData,
+    minAltitude,
+    maxAltitude,
+    minX,
+    maxX,
+    points,
+    path,
+    fillPath,
+    xTicks,
+    yTicks,
+  } = useMemo(() => {
+    // Sort data by altitude
+    const sorted = (data || [])
+      .map(item => ({
+        ...item,
+        altitude:
+          typeof item.altitude_bin === 'string' &&
+          item.altitude_bin.includes('-')
+            ? parseFloat(item.altitude_bin.split('-')[0])
+            : NaN,
+      }))
+      .filter(
+        item =>
+          typeof item[xAxisDataKey] === 'number' &&
+          typeof item.altitude === 'number' &&
+          !isNaN(item[xAxisDataKey]) &&
+          !isNaN(item.altitude),
+      )
+      .sort((a, b) => a.altitude - b.altitude);
+
+    // Early error case - can return early inside useMemo
+    if (sorted.length < 2) {
+      return {
+        sortedData: sorted,
+        minAltitude: 0,
+        maxAltitude: 0,
+        minX: 0,
+        maxX: 0,
+        points: [],
+        path: Skia.Path.Make(),
+        fillPath: Skia.Path.Make(),
+        xTicks: [],
+        yTicks: [],
+      };
+    }
+
+    // Calculate min/max values
+    const minAlt = Math.min(...sorted.map(item => item.altitude));
+    const maxAlt = Math.max(...sorted.map(item => item.altitude));
+    const minXVal = Math.min(...sorted.map(item => item[xAxisDataKey]));
+    const maxXVal = Math.max(...sorted.map(item => item[xAxisDataKey]));
+
+    // Safety check for division by zero
+    if (
+      isNaN(minXVal) ||
+      isNaN(maxXVal) ||
+      isNaN(minAlt) ||
+      isNaN(maxAlt) ||
+      maxXVal === minXVal ||
+      maxAlt === minAlt
+    ) {
+      return {
+        sortedData: sorted,
+        minAltitude: minAlt,
+        maxAltitude: maxAlt,
+        minX: minXVal,
+        maxX: maxXVal,
+        points: [],
+        path: Skia.Path.Make(),
+        fillPath: Skia.Path.Make(),
+        xTicks: [],
+        yTicks: [],
+      };
+    }
+
+    // Calculate graph points
+    const graphPoints = sorted
+      .map(item => {
+        // Avoid division by zero
+        const xNormalizer = maxXVal === minXVal ? 1 : maxXVal - minXVal;
+        const yNormalizer = maxAlt === minAlt ? 1 : maxAlt - minAlt;
+
+        return {
+          x: 50 + ((item[xAxisDataKey] - minXVal) / xNormalizer) * 300,
+          y: 300 - ((item.altitude - minAlt) / yNormalizer) * 250,
+        };
+      })
+      .filter(
+        p =>
+          typeof p.x === 'number' &&
+          typeof p.y === 'number' &&
+          isFinite(p.x) &&
+          isFinite(p.y) &&
+          !isNaN(p.x) &&
+          !isNaN(p.y),
+      );
+
+    // Create the path for the line
+    const linePath = getStraightPath(graphPoints);
+
+    // Create fill path
+    let localFillPath = Skia.Path.Make();
+    if (graphPoints.length > 1) {
+      localFillPath.moveTo(graphPoints[0].x, 300);
+      graphPoints.forEach(p => localFillPath.lineTo(p.x, p.y));
+      localFillPath.lineTo(graphPoints[graphPoints.length - 1].x, 300);
+      localFillPath.close();
+    }
+
+    // Generate tick marks
+    const xStepSize = (maxXVal - minXVal) / 5;
+    const generatedXTicks = generateTicks(minXVal, maxXVal, xStepSize).map(
+      tick => parseFloat(tick.toFixed(3)),
+    );
+
+    const yStepSize = (maxAlt - minAlt) / 5;
+    const generatedYTicks = generateTicks(minAlt, maxAlt, yStepSize).map(tick =>
+      parseFloat(tick.toFixed(1)),
+    );
+
+    return {
+      sortedData: sorted,
+      minAltitude: minAlt,
+      maxAltitude: maxAlt,
+      minX: minXVal,
+      maxX: maxXVal,
+      points: graphPoints,
+      path: linePath,
+      fillPath: localFillPath,
+      xTicks: generatedXTicks,
+      yTicks: generatedYTicks,
+    };
+  }, [data, xAxisDataKey]); // Only recalculate when these dependencies change
+
+  // useEffect(() => {
+  //   return () => {
+  //     path = null;
+  //     fillPath = null;
+  //     points = [];
+  //   };
+  // }, [selectedTab]);
 
   if (loading) {
     return (
@@ -69,46 +243,7 @@ const LineGraph = ({
     );
   }
 
-  const xAxisLabel =
-    selectedTab === 'Altitude - Temperature'
-      ? 'Temperature (°C)'
-      : 'Humidity (%)';
-  const xAxisDataKey =
-    selectedTab === 'Altitude - Temperature'
-      ? 'average_temperature'
-      : 'average_humidity';
-
-  // Sort data by altitude
-  // const sortedData = data
-  //   .filter(item => item[xAxisDataKey] !== null && item.altitude !== null) // Filter out invalid data
-  //   .sort((a, b) => a.altitude - b.altitude); // Sort by altitude
-
-  /* Added */
-  const sortedData = (data || [])
-    .map(item => ({
-      ...item,
-      altitude:
-        typeof item.altitude_bin === 'string' && item.altitude_bin.includes('-')
-          ? parseFloat(item.altitude_bin.split('-')[0])
-          : NaN,
-    }))
-    .filter(
-      item =>
-        typeof item[xAxisDataKey] === 'number' &&
-        typeof item.altitude === 'number' &&
-        !isNaN(item[xAxisDataKey]) &&
-        !isNaN(item.altitude),
-    )
-    .sort((a, b) => a.altitude - b.altitude);
-
-  if (sortedData.length === 0) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No valid data to display.</Text>
-      </View>
-    );
-  }
-
+  // Error handling for insufficient data
   if (sortedData.length < 2) {
     return (
       <View style={styles.errorContainer}>
@@ -119,16 +254,7 @@ const LineGraph = ({
     );
   }
 
-  // Determine the min and max values for temperature/humidity and altitude
-  const minAltitude = Math.min(...sortedData.map(item => item.altitude));
-  const maxAltitude = Math.max(...sortedData.map(item => item.altitude));
-  let minX = Math.min(...sortedData.map(item => item[xAxisDataKey]));
-  let maxX = Math.max(...sortedData.map(item => item[xAxisDataKey]));
-
-  // console.log('sortedData', sortedData);
-  // console.log('minX', minX, 'maxX', maxX);
-
-  // ** GUARD **
+  // Error handling for invalid axis values
   if (
     isNaN(minX) ||
     isNaN(maxX) ||
@@ -148,63 +274,6 @@ const LineGraph = ({
     );
   }
 
-  const points = sortedData
-    .map(item => {
-      // Avoid division by zero
-      const xNormalizer = maxX === minX ? 1 : maxX - minX;
-      const yNormalizer =
-        maxAltitude === minAltitude ? 1 : maxAltitude - minAltitude;
-
-      return {
-        x: 50 + ((item[xAxisDataKey] - minX) / xNormalizer) * 300,
-        y: 300 - ((item.altitude - minAltitude) / yNormalizer) * 250,
-      };
-    })
-    .filter(
-      p =>
-        typeof p.x === 'number' &&
-        typeof p.y === 'number' &&
-        isFinite(p.x) &&
-        isFinite(p.y) &&
-        !isNaN(p.x) &&
-        !isNaN(p.y),
-    );
-
-  // if (
-  //   points.some(
-  //     p => isNaN(p.x) || isNaN(p.y) || !isFinite(p.x) || !isFinite(p.y),
-  //   )
-  // ) {
-  //   return (
-  //     <View style={styles.errorContainer}>
-  //       <Text style={styles.errorText}>
-  //         Data error: invalid point coordinates.
-  //       </Text>
-  //     </View>
-  //   );
-  // }
-
-  // Create a path for the line graph
-  const path = getStraightPath(points);
-  // Area fill under the line (delicate)
-  let fillPath = Skia.Path.Make();
-  if (points.length > 1) {
-    fillPath.moveTo(points[0].x, 300);
-    points.forEach(p => fillPath.lineTo(p.x, p.y));
-    fillPath.lineTo(points[points.length - 1].x, 300);
-    fillPath.close();
-  }
-
-  const xStepSize = (maxX - minX) / 5; // Divide the range into 5 steps
-  const xTicks = generateTicks(minX, maxX, xStepSize).map(tick =>
-    parseFloat(tick.toFixed(3)),
-  ); // Format to 3 decimal places
-
-  const yStepSize = (maxAltitude - minAltitude) / 5; // Divide the range into 5 steps
-  const yTicks = generateTicks(minAltitude, maxAltitude, yStepSize).map(tick =>
-    parseFloat(tick.toFixed(1)),
-  ); // Format to 1 decimal place
-
   // function getSmoothPath(points: { x: number; y: number }[]) {
   //   if (points.length < 2) return Skia.Path.Make();
   //   const path = Skia.Path.Make();
@@ -220,15 +289,21 @@ const LineGraph = ({
   //   return path;
   // }
 
-  function getStraightPath(points: { x: number; y: number }[]) {
-    if (points.length < 2) return Skia.Path.Make();
-    const path = Skia.Path.Make();
-    path.moveTo(points[0].x, points[0].y);
-    points.forEach(point => {
-      path.lineTo(point.x, point.y);
+  function getStraightPath(pathPoints: { x: number; y: number }[]) {
+    if (pathPoints.length < 2) return Skia.Path.Make();
+    const localPath = Skia.Path.Make();
+    localPath.moveTo(pathPoints[0].x, pathPoints[0].y);
+    pathPoints.forEach(point => {
+      localPath.lineTo(point.x, point.y);
     });
-    return path;
+    return localPath;
   }
+
+  const maxPoints = 10; // Adjust as needed for specific device
+  const sampledPoints =
+    points.length > maxPoints
+      ? points.filter((_, i) => i % Math.ceil(points.length / maxPoints) === 0)
+      : points;
 
   return (
     <>
@@ -340,13 +415,15 @@ const LineGraph = ({
 
           {/* Draw the line graph */}
           {/* Shadow under the line */}
-          <Path
-            path={path}
-            style="stroke"
-            strokeWidth={7}
-            color="#A20025"
-            opacity={0.13}
-          />
+          {showShadows && (
+            <Path
+              path={path}
+              style="stroke"
+              strokeWidth={7}
+              color="#A20025"
+              opacity={0.13}
+            />
+          )}
 
           {/* Main line */}
           <Path
@@ -358,23 +435,23 @@ const LineGraph = ({
           />
 
           {/* Draw data points */}
-          {points.map((point, index) => (
+          {sampledPoints.map((point, index) => (
             <React.Fragment key={`point-${point.x}-${point.y}-${index}`}>
               <Circle
                 cx={point.x}
                 cy={point.y}
-                r={4}
+                r={pointSize}
                 color="#fff"
                 style="stroke"
-                strokeWidth={2}
-                opacity={0.8}
+                strokeWidth={isProduction ? 1 : 2}
+                opacity={pointOpacity}
               />
               <Circle
                 cx={point.x}
                 cy={point.y}
-                r={2.5}
+                r={pointSize * 0.6}
                 color="#A20025"
-                opacity={0.8}
+                opacity={pointOpacity}
               />
             </React.Fragment>
           ))}

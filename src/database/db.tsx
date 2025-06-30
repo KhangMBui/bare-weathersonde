@@ -10,8 +10,8 @@ export function getDb() {
 }
 
 export function initDB() {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(`
       CREATE TABLE IF NOT EXISTS records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,9 +35,8 @@ export function initDB() {
 }
 
 export function insertRecord(record: any, callback?: () => void) {
-  const db = getDb();
-  console.log('Record: ', record);
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `INSERT OR IGNORE INTO records (date, time, altitude, internalTemp, internalRH, internalPres, airTemp, weatherRH, inversionIntensity, inversionHeight, inversionRate, projectName, experimentNumber)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -66,12 +65,12 @@ export function getNextExperimentNumber(
   projectName: string,
   callback: (nextNumber: number) => void,
 ) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT MAX(experimentNumber) as maxNum FROM records WHERE projectName = ?`,
       [projectName],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const maxNum = result.rows.item(0).maxNum;
         callback(maxNum ? maxNum + 1 : 1);
       },
@@ -84,12 +83,12 @@ export function getNextExperimentNumber(
 }
 
 export function fetchRecords(callback: (records: any[]) => void) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT * FROM records ORDER BY id DESC LIMIT 20`,
       [],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const records = [];
         for (let i = 0; i < result.rows.length; i++) {
           records.push(result.rows.item(i));
@@ -106,12 +105,12 @@ export function fetchRecordsByProject(
   experimentNumber: number,
   callback: (records: any[]) => void,
 ) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT * FROM records WHERE projectName = ? AND experimentNumber = ? ORDER BY id DESC`,
       [projectName, experimentNumber],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const records = [];
         for (let i = 0; i < result.rows.length; i++) {
           records.push(result.rows.item(i));
@@ -124,12 +123,12 @@ export function fetchRecordsByProject(
 }
 
 export function fetchUniqueProjectNames(callback: (names: string[]) => void) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT DISTINCT projectName FROM records ORDER BY projectName ASC`,
       [],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const names: string[] = [];
         for (let i = 0; i < result.rows.length; i++) {
           names.push(result.rows.item(i).projectName);
@@ -145,12 +144,12 @@ export function fetchExperimentNumbersForProject(
   projectName: string,
   callback: (numbers: number[]) => void,
 ) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT DISTINCT experimentNumber FROM records WHERE projectName = ? ORDER BY experimentNumber ASC`,
       [projectName],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const numbers: number[] = [];
         for (let i = 0; i < result.rows.length; i++) {
           numbers.push(result.rows.item(i).experimentNumber);
@@ -168,8 +167,8 @@ export function fetchExperimentNumbersWithDateForProject(
     items: { experimentNumber: number; date: string; time: string }[],
   ) => void,
 ) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(
       `SELECT experimentNumber, MIN(date) as date, MIN(time) as time
        FROM records
@@ -177,7 +176,7 @@ export function fetchExperimentNumbersWithDateForProject(
        GROUP BY experimentNumber
        ORDER BY experimentNumber ASC`,
       [projectName],
-      (tx: any, result: any) => {
+      (_tx: any, result: any) => {
         const items: {
           experimentNumber: number;
           date: string;
@@ -195,8 +194,8 @@ export function fetchExperimentNumbersWithDateForProject(
 }
 
 export function clearRecords(callback?: () => void) {
-  const db = getDb();
-  db.transaction((tx: any) => {
+  const database = getDb();
+  database.transaction((tx: any) => {
     tx.executeSql(`DELETE FROM records`, [], callback, (err: any) =>
       console.log('Clear error:', err),
     );

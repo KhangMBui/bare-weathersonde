@@ -59,16 +59,16 @@ export default function Settings() {
   const [authorsModalVisible, setAuthorsModalVisible] = useState(false);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#A60F2D' }}>
+    <SafeAreaView style={styles.container}>
       <Header />
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.settingsTitle}>Settings</Text>
         <View style={styles.mainContainer}>
           {/* Temperature Unit */}
           <>
             <Text style={styles.sectionHeader}>Units</Text>
             <Text style={styles.label}>Temperature</Text>
-            <View style={{ zIndex: 3000 }}>
+            <View style={styles.tempDropdownWrapper}>
               <DropDownPicker
                 open={tempOpen}
                 value={temperatureUnit}
@@ -91,7 +91,7 @@ export default function Settings() {
             </View>
             {/* Distance Unit */}
             <Text style={styles.label}>Distance</Text>
-            <View style={{ zIndex: 2000 }}>
+            <View style={styles.distDropdownWrapper}>
               <DropDownPicker
                 open={distOpen}
                 value={distanceUnit}
@@ -194,6 +194,13 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#A60F2D',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   mainContainer: {
     backgroundColor: '#fff',
     flex: 1,
@@ -286,5 +293,11 @@ const styles = StyleSheet.create({
   logo: {
     height: 20,
     width: 20,
+  },
+  distDropdownWrapper: {
+    zIndex: 2000,
+  },
+  tempDropdownWrapper: {
+    zIndex: 3000,
   },
 });

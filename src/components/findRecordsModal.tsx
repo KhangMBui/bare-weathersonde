@@ -114,7 +114,7 @@ export default function FindRecordsModal({
               setItems={setProjectNameItems}
               placeholder="Select project..."
               style={styles.picker}
-              containerStyle={{ marginBottom: 16, width: 260 }}
+              containerStyle={styles.pickerContainer}
               onOpen={onProjectOpen}
               zIndex={2000}
               zIndexInverse={1000}
@@ -133,7 +133,7 @@ export default function FindRecordsModal({
               setItems={setExperimentNumberItems}
               placeholder="Select experiment..."
               style={styles.picker}
-              containerStyle={{ marginBottom: 16, width: 260 }}
+              containerStyle={styles.pickerContainer}
               onOpen={onExperimentOpen}
               disabled={!selectedProject}
               zIndex={1000}
@@ -142,17 +142,19 @@ export default function FindRecordsModal({
           )}
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#6E6E6E' }]}
+              style={[styles.button, styles.cancelButton]}
               onPress={onClose}
             >
-              <Text style={[styles.buttonText, { color: '#fff' }]}>Cancel</Text>
+              <Text style={[styles.buttonText, styles.buttonTextWhite]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: '#A60F2D' }]}
+              style={[styles.button, styles.findButton]}
               onPress={handleFind}
               disabled={!selectedProject || selectedExperiment === null}
             >
-              <Text style={[styles.buttonText, { color: '#fff' }]}>
+              <Text style={[styles.buttonText, styles.buttonTextWhite]}>
                 {isGeneratingGraph ? 'Generate' : 'Find'}
               </Text>
             </TouchableOpacity>
@@ -193,6 +195,10 @@ const styles = StyleSheet.create({
     width: 260,
     marginBottom: 10,
   },
+  pickerContainer: {
+    marginBottom: 16,
+    width: 260,
+  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -208,5 +214,14 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonTextWhite: {
+    color: '#fff',
+  },
+  findButton: {
+    backgroundColor: '#A60F2D',
+  },
+  cancelButton: {
+    backgroundColor: '#6E6E6E',
   },
 });
