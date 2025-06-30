@@ -176,13 +176,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 24,
-    width: 320,
+    minWidth: 320,
+    width: '90%', // or try 400, or Math.min(400, Dimensions.get('window').width * 0.9)
+    maxWidth: 500,
     alignItems: 'center',
+  },
+  picker: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  pickerContainer: {
+    marginBottom: 16,
+    width: '100%',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#222',
   },
   label: {
     fontSize: 16,
@@ -190,14 +201,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 4,
     alignSelf: 'flex-start',
-  },
-  picker: {
-    width: 260,
-    marginBottom: 10,
-  },
-  pickerContainer: {
-    marginBottom: 16,
-    width: 260,
+    color: '#222',
   },
   buttonRow: {
     flexDirection: 'row',

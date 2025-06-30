@@ -209,11 +209,11 @@ const styles = StyleSheet.create({
   button: {
     position: 'absolute',
     top: 40,
-    // left: "110%",
-    right: '-26%',
-    transform: [{ translateX: -100 }],
+    right: 0,
     padding: 10,
     borderRadius: 5,
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
   recenterButton: {
     position: 'absolute',
