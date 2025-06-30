@@ -242,7 +242,7 @@ const LineGraph = ({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data || data.length < 2) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>No data available to display.</Text>

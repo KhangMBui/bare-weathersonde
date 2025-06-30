@@ -62,6 +62,7 @@ export default function AnalyticsScreen() {
   const recordIndex = useRef(0);
   const [selectedTab, setSelectedTab] = useState('Altitude - Temperature');
   const { historicalData, setHistoricalData } = useHistoricalData();
+  const [loading, setLoading] = useState(false);
 
   // Convert your historicalData to the format expected by LineGraph
   // (bin by altitude, compute averages)
@@ -85,8 +86,6 @@ export default function AnalyticsScreen() {
         !isNaN(item.temperature) &&
         !isNaN(item.humidity),
     );
-
-  // console.log('mappedData', mappedData);
 
   const binnedData = useMemo(
     () => binByAltitude(mappedData, 2, selectedTab), // 2 is the bin size, adjust as needed
@@ -139,8 +138,10 @@ export default function AnalyticsScreen() {
   ] = useState<number | null>(null);
 
   const handleRecordsFound = (records: any[]) => {
+    setLoading(true);
     setHistoricalData(records);
     setFindModalVisible(false);
+    setLoading(false);
   };
 
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -173,6 +174,15 @@ export default function AnalyticsScreen() {
       }
     };
   }, [debouncedTabChange]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#A20025" />
+        <Text style={styles.loadingText}>Loading data...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.mainContainer}>
@@ -293,5 +303,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
   },
 });
