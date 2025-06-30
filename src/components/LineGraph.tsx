@@ -21,6 +21,7 @@ import {
 import { calculateInversion } from '../utils/calculateInversion';
 import InversionCard from './inversionCard';
 import { useHistoricalData } from '../contexts/HistoricalDataContext';
+import { Dimensions } from 'react-native';
 
 const fontFamily = Platform.select({ ios: 'helvetia', default: 'sans-serif' });
 const font = matchFont({ fontFamily, fontSize: 12 });
@@ -47,18 +48,16 @@ const LineGraph = ({
   const pointOpacity = isProduction ? 0.7 : 0.8;
   const showShadows = !isProduction;
 
-  // const [renderPhase, setRenderPhase] = useState(0);
+  const { width: deviceWidth } = Dimensions.get('window');
+  const graphWidth = Math.min(deviceWidth - 32, 600);
+  const graphHeight = graphWidth * 0.875;
+  const marginLeft = 50;
+  const marginBottom = 50;
+  const marginTop = 50;
+  const marginRight = 50;
 
-  // useEffect(() => {
-  //   setRenderPhase(0);
-  //   const timers = [
-  //     setTimeout(() => setRenderPhase(1), 50), // Axes and background
-  //     setTimeout(() => setRenderPhase(2), 100), // Ticks and labels
-  //     setTimeout(() => setRenderPhase(3), 150), // Fill and line
-  //     setTimeout(() => setRenderPhase(4), 200), // Points
-  //   ];
-  //   return () => timers.forEach(clearTimeout);
-  // }, [selectedTab, minX, maxX, minAltitude, maxAltitude]);
+  const drawableWidth = graphWidth - marginLeft - marginRight;
+  const drawableHeight = graphHeight - marginTop - marginBottom;
 
   const data = useMemo(() => propData || [], [propData]);
   const loading = false;
@@ -167,8 +166,13 @@ const LineGraph = ({
         const yNormalizer = maxAlt === minAlt ? 1 : maxAlt - minAlt;
 
         return {
-          x: 50 + ((item[xAxisDataKey] - minXVal) / xNormalizer) * 300,
-          y: 300 - ((item.altitude - minAlt) / yNormalizer) * 250,
+          x:
+            marginLeft +
+            ((item[xAxisDataKey] - minXVal) / xNormalizer) * drawableWidth,
+          y:
+            graphHeight -
+            marginBottom -
+            ((item.altitude - minAlt) / yNormalizer) * drawableHeight,
         };
       })
       .filter(
@@ -187,9 +191,12 @@ const LineGraph = ({
     // Create fill path
     let localFillPath = Skia.Path.Make();
     if (graphPoints.length > 1) {
-      localFillPath.moveTo(graphPoints[0].x, 300);
+      localFillPath.moveTo(graphPoints[0].x, graphHeight - marginBottom);
       graphPoints.forEach(p => localFillPath.lineTo(p.x, p.y));
-      localFillPath.lineTo(graphPoints[graphPoints.length - 1].x, 300);
+      localFillPath.lineTo(
+        graphPoints[graphPoints.length - 1].x,
+        graphHeight - marginBottom,
+      );
       localFillPath.close();
     }
 
@@ -216,7 +223,7 @@ const LineGraph = ({
       xTicks: generatedXTicks,
       yTicks: generatedYTicks,
     };
-  }, [data, xAxisDataKey]); // Only recalculate when these dependencies change
+  }, [data, drawableHeight, drawableWidth, graphHeight, xAxisDataKey]); // Only recalculate when these dependencies change
 
   // useEffect(() => {
   //   return () => {
@@ -318,36 +325,51 @@ const LineGraph = ({
           ? 'Inversion Graph'
           : 'Humidity Graph'}
       </Text> */}
-      <View style={styles.graphContainer}>
-        <Canvas style={styles.canvas}>
+      <View style={[styles.graphContainer, styles.graphContainerFullWidth]}>
+        <Canvas
+          style={[styles.canvas, { width: graphWidth, height: graphHeight }]}
+        >
           {/* Draw x-axis */}
           <Paint>
             <LinearGradient
               start={vec(0, 0)}
-              end={vec(400, 350)}
+              end={vec(graphWidth, graphHeight)}
               colors={['#f8fafc', '#e0e7ef']}
             />
           </Paint>
           <Line
-            p1={{ x: 50, y: 300 }}
-            p2={{ x: 350, y: 300 }}
+            p1={{ x: marginLeft, y: graphHeight - marginBottom }}
+            p2={{ x: graphWidth - marginRight, y: graphHeight - marginBottom }}
             color="#000"
             strokeWidth={1}
           />
           {/* Draw y-axis */}
           <Line
-            p1={{ x: 50, y: 50 }}
-            p2={{ x: 50, y: 300 }}
+            p1={{ x: marginLeft, y: marginTop }}
+            p2={{ x: marginLeft, y: graphHeight - marginBottom }}
             color="#000"
             strokeWidth={1}
           />
 
           {/* Add x-axis label */}
-          <SkiaText x={150} y={340} text={xAxisLabel} font={font} />
+          <SkiaText
+            x={
+              marginLeft +
+              drawableWidth / 2 -
+              (font?.measureText(xAxisLabel).width ?? 0) / 2
+            }
+            y={graphHeight - marginBottom + 36}
+            text={xAxisLabel}
+            font={font}
+          />
           {/* Add y-axis label */}
           <SkiaText
-            x={-210}
-            y={14}
+            x={16}
+            y={
+              marginTop +
+              drawableHeight / 2 +
+              (font?.measureText('Altitude (m)').width ?? 0) / 2
+            }
             text="Altitude (m)"
             font={font}
             transform={[{ rotate: -Math.PI / 2 }]}
@@ -357,25 +379,18 @@ const LineGraph = ({
           {xTicks.map((value, index) => {
             const label = value.toFixed(3); // Format to 3 decimal place
             const textWidth = font?.measureText(label).width ?? 0;
-
+            const xPos =
+              marginLeft + ((value - minX) / (maxX - minX)) * drawableWidth;
             return (
               <React.Fragment key={`x-tick-${value ?? 'NA'}-${index}`}>
                 <Line
-                  p1={{
-                    x: 50 + ((value - minX) / (maxX - minX)) * 300,
-                    y: 296,
-                  }}
-                  p2={{
-                    x: 50 + ((value - minX) / (maxX - minX)) * 300,
-                    y: 305,
-                  }}
+                  p1={{ x: xPos, y: graphHeight - marginBottom - 4 }}
+                  p2={{ x: xPos, y: graphHeight - marginBottom + 9 }}
                   strokeWidth={1}
                 />
                 <SkiaText
-                  x={
-                    50 + ((value - minX) / (maxX - minX)) * 300 - textWidth / 2
-                  } // Center-align the label
-                  y={320}
+                  x={xPos - textWidth / 2}
+                  y={graphHeight - marginBottom + 20}
                   text={label}
                   font={font}
                 />
@@ -388,19 +403,22 @@ const LineGraph = ({
             const label = value.toFixed(1); // Format to 1 decimal place
             const textWidth = font?.measureText(label).width ?? 0;
             const y =
-              300 - ((value - minAltitude) / (maxAltitude - minAltitude)) * 250;
+              graphHeight -
+              marginBottom -
+              ((value - minAltitude) / (maxAltitude - minAltitude)) *
+                drawableHeight;
 
             return (
               <React.Fragment key={`y-tick-${value ?? 'NA'}-${index}`}>
                 <Line
-                  p1={{ x: 54, y }}
-                  p2={{ x: 46, y }}
+                  p1={{ x: marginLeft + 4, y }}
+                  p2={{ x: marginLeft - 4, y }}
                   color="#000"
                   strokeWidth={1}
                   opacity={0.7}
                 />
                 <SkiaText
-                  x={45 - textWidth - 5} // Right-align the label
+                  x={marginLeft - textWidth - 10}
                   y={y + 4}
                   text={label}
                   font={font}
@@ -496,9 +514,13 @@ const styles = StyleSheet.create({
     // padding: 20,
     marginTop: 0,
   },
+  graphContainerFullWidth: {
+    width: '100%',
+    alignItems: 'center',
+  },
   canvas: {
-    width: 400,
-    height: 350,
+    // width: 400,
+    // height: 350,
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
     elevation: 3,
