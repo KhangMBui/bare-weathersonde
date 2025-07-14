@@ -1,4 +1,5 @@
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 
 interface Props {
@@ -13,16 +14,18 @@ export default function OptionHeader({
   onTabChange,
 }: Props) {
   return (
-    <View style={styles.tabContainer}>
-      {tabs.map(tab => (
-        <TouchableOpacity key={tab} onPress={() => onTabChange(tab)}>
-          <Text style={selectedTab === tab ? styles.activeTab : styles.tab}>
-            {tab}
-          </Text>
-          {selectedTab === tab && <View style={styles.indicator} />}
-        </TouchableOpacity>
-      ))}
-    </View>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top']}>
+      <View style={styles.tabContainer}>
+        {tabs.map(tab => (
+          <TouchableOpacity key={tab} onPress={() => onTabChange(tab)}>
+            <Text style={selectedTab === tab ? styles.activeTab : styles.tab}>
+              {tab}
+            </Text>
+            {selectedTab === tab && <View style={styles.indicator} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -32,6 +35,10 @@ const baseTab = {
   color: 'white',
 };
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    backgroundColor: '#A60F2D',
+    width: '100%',
+  },
   tabContainer: {
     height: 40,
     backgroundColor: '#A60F2D',

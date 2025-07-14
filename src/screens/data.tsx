@@ -51,6 +51,9 @@ export default function DataScreen() {
 
   const [findModalVisible, setFindModalVisible] = useState(false);
 
+  // Newly added
+  const [recordingData, setRecordingData] = useState<any[]>([]);
+
   const handleRecordsFound = (records: any[]) => {
     setHistoricalData(records);
     setSelectedTab('Historical');
@@ -64,11 +67,14 @@ export default function DataScreen() {
     setShowPrompt(false);
     if (!name) return;
     getNextExperimentNumber(name, nextNum => {
-      console.log('Project name: ', name);
-      console.log('Experiment number: ', nextNum);
+      // console.log('Project name: ', name);
+      // console.log('Experiment number: ', nextNum);
       setProjectName(name);
       setExperimentNumber(nextNum);
       setIsRecording(true);
+
+      // Clear the recording data when starting new recording
+      setRecordingData([]);
     });
   };
 
@@ -181,8 +187,8 @@ export default function DataScreen() {
           experimentNumber,
         };
 
-        console.log('Records: ', records);
-        console.log('New entry: ', newEntry);
+        // console.log('Records: ', records);
+        // console.log('New entry: ', newEntry);
 
         const isDuplicate =
           last && last.date === newEntry.date && last.time === newEntry.time;
@@ -203,11 +209,11 @@ export default function DataScreen() {
     setHistoricalData,
   ]);
 
-  useEffect(() => {
-    if (selectedTab === 'Historical') {
-      fetchRecords(records => setHistoricalData(records));
-    }
-  }, [selectedTab, setHistoricalData]);
+  // useEffect(() => {
+  //   if (selectedTab === 'Historical') {
+  //     fetchRecords(records => setHistoricalData(records));
+  //   }
+  // }, [selectedTab, setHistoricalData]);
 
   return (
     <>
@@ -490,7 +496,7 @@ export default function DataScreen() {
                   }}
                 >
                   <Text style={styles.actionButtonText}>
-                    {isRecording ? 'Stop Recording' : 'Records'}
+                    {isRecording ? 'Stop Recording' : 'Record'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity

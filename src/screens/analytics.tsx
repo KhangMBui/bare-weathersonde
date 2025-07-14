@@ -63,36 +63,35 @@ export default function AnalyticsScreen() {
   const [selectedTab, setSelectedTab] = useState('Altitude - Temperature');
   const { historicalData, setHistoricalData } = useHistoricalData();
   const [loading, setLoading] = useState(false);
+  const [graphData, setGraphData] = useState<any[]>([]);
 
   // Convert your historicalData to the format expected by LineGraph
   // (bin by altitude, compute averages)
-  const mappedData = historicalData
-    .map(item => ({
-      altitude: Number(item.altitude),
-      temperature: Number(item.airTemp),
-      humidity:
-        item.weatherRH !== undefined &&
-        item.weatherRH !== null &&
-        item.weatherRH !== ''
-          ? Number(String(item.weatherRH).replace(/%/g, '').trim())
-          : NaN,
-    }))
-    .filter(
-      item =>
-        typeof item.altitude === 'number' &&
-        typeof item.temperature === 'number' &&
-        typeof item.humidity === 'number' &&
-        !isNaN(item.altitude) &&
-        !isNaN(item.temperature) &&
-        !isNaN(item.humidity),
-    );
+  // const mappedData = historicalData
+  //   .map(item => ({
+  //     altitude: Number(item.altitude),
+  //     temperature: Number(item.airTemp),
+  //     humidity:
+  //       item.weatherRH !== undefined &&
+  //       item.weatherRH !== null &&
+  //       item.weatherRH !== ''
+  //         ? Number(String(item.weatherRH).replace(/%/g, '').trim())
+  //         : NaN,
+  //   }))
+  //   .filter(
+  //     item =>
+  //       typeof item.altitude === 'number' &&
+  //       typeof item.temperature === 'number' &&
+  //       typeof item.humidity === 'number' &&
+  //       !isNaN(item.altitude) &&
+  //       !isNaN(item.temperature) &&
+  //       !isNaN(item.humidity),
+  //   );
 
   const binnedData = useMemo(
-    () => binByAltitude(mappedData, 2, selectedTab), // 2 is the bin size, adjust as needed
-    [mappedData, selectedTab],
+    () => binByAltitude(graphData, 2, selectedTab),
+    [graphData, selectedTab],
   );
-
-  // console.log('binnedData', binnedData);
 
   useEffect(() => {
     if (!TEST_MODE) return; // Only run in test mode
@@ -121,11 +120,40 @@ export default function AnalyticsScreen() {
     return () => clearInterval(interval);
   }, [TEST_MODE, predefined_records, setHistoricalData]);
 
+  // useEffect(() => {
+  //   if (!TEST_MODE) {
+  //     setHistoricalData([]);
+  //   }
+  // }, [TEST_MODE, setHistoricalData]);
+
+  // Add this effect to your analytics.tsx
   useEffect(() => {
-    if (!TEST_MODE) {
-      setHistoricalData([]); // Clear test data when switching to real mode
+    // Process historical data into graph data when component mounts
+    if (historicalData.length > 0) {
+      const processedData = historicalData
+        .map(item => ({
+          altitude: Number(item.altitude),
+          temperature: Number(item.airTemp),
+          humidity:
+            item.weatherRH !== undefined &&
+            item.weatherRH !== null &&
+            item.weatherRH !== ''
+              ? Number(String(item.weatherRH).replace(/%/g, '').trim())
+              : NaN,
+        }))
+        .filter(
+          item =>
+            typeof item.altitude === 'number' &&
+            typeof item.temperature === 'number' &&
+            typeof item.humidity === 'number' &&
+            !isNaN(item.altitude) &&
+            !isNaN(item.temperature) &&
+            !isNaN(item.humidity),
+        );
+
+      setGraphData(processedData);
     }
-  }, [TEST_MODE, setHistoricalData]);
+  }, []); // Empty dependency array so it only runs on mount
 
   const [findModalVisible, setFindModalVisible] = useState(false);
   const [
@@ -141,9 +169,32 @@ export default function AnalyticsScreen() {
     setLoading(true);
     setHistoricalData(records);
     setFindModalVisible(false);
+
+    // Process the data for graph rendering after records are found
+    const processedData = records
+      .map(item => ({
+        altitude: Number(item.altitude),
+        temperature: Number(item.airTemp),
+        humidity:
+          item.weatherRH !== undefined &&
+          item.weatherRH !== null &&
+          item.weatherRH !== ''
+            ? Number(String(item.weatherRH).replace(/%/g, '').trim())
+            : NaN,
+      }))
+      .filter(
+        item =>
+          typeof item.altitude === 'number' &&
+          typeof item.temperature === 'number' &&
+          typeof item.humidity === 'number' &&
+          !isNaN(item.altitude) &&
+          !isNaN(item.temperature) &&
+          !isNaN(item.humidity),
+      );
+
+    setGraphData(processedData);
     setLoading(false);
   };
-
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleTabChange = useCallback(
@@ -210,13 +261,22 @@ export default function AnalyticsScreen() {
               Project: {selectedProject} — Experiment: {selectedExperiment}
             </Text>
           )}
-          <ErrorBoundary>
-            <LineGraph
-              key={selectedTab + '-' + Date.now()}
-              selectedTab={selectedTab}
-              data={binnedData}
-            />
-          </ErrorBoundary>
+          {binnedData && binnedData.length > 0 ? (
+            <ErrorBoundary>
+              <LineGraph
+                key={selectedTab + '-' + Date.now()}
+                selectedTab={selectedTab}
+                data={binnedData}
+              />
+            </ErrorBoundary>
+          ) : (
+            <View style={styles.emptyGraphContainer}>
+              <Text style={styles.emptyGraphText}>
+                Select a project and experiment, then click "Generate Graph" to
+                display data
+              </Text>
+            </View>
+          )}
         </ScrollView>
       )}
       {/* Button container at bottom */}
@@ -224,7 +284,9 @@ export default function AnalyticsScreen() {
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.findButton, styles.generateGraphButton]}
-            onPress={() => setFindModalVisible(true)}
+            onPress={() => {
+              setFindModalVisible(true);
+            }}
           >
             <Text style={styles.findButtonText}>Generate Graph</Text>
           </TouchableOpacity>
@@ -308,5 +370,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#555',
+  },
+  emptyGraphContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 300,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    margin: 10,
+  },
+  emptyGraphText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
   },
 });

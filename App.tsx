@@ -16,6 +16,8 @@ import 'react-native-url-polyfill/auto';
 import UsbSerialScreen from './src/screens/UsbSerialScreen';
 import { RecordingProvider } from './src/contexts/RecordingContext';
 import { TextDecoder, TextEncoder } from 'text-encoding';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 if (typeof global.TextDecoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
@@ -27,7 +29,7 @@ const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar backgroundColor="#A60F2D" barStyle="light-content" />
       <RecordingProvider>
         <SettingsProvider>
@@ -53,7 +55,7 @@ function App(): React.JSX.Element {
           </HistoricalDataProvider>
         </SettingsProvider>
       </RecordingProvider>
-    </>
+    </SafeAreaProvider>
   );
 }
 

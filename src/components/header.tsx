@@ -1,28 +1,35 @@
 import { StyleSheet, View, Text, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Header() {
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.contentContainer}>
-        <Text style={styles.appTitle}>WSU WeatherSonde</Text>
-        <View style={styles.logoContainer}>
-          {/* <Image
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top']}>
+      <View style={styles.headerContainer}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.appTitle}>WSU WeatherSonde</Text>
+          <View style={styles.logoContainer}>
+            {/* <Image
             source={require('./../assets/images/final-logo-2.png')}
             style={styles.combinedLogo}
           /> */}
-          {/* <Image
+            {/* <Image
           source={require("./../assets/images/AGAID-logo.png")}
           style={styles.agaidLogo}
         ></Image> */}
+          </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    backgroundColor: '#A60F2D',
+    width: '100%',
+  },
   headerContainer: {
-    // marginTop: 20,
+    // marginTop: 35,
     backgroundColor: '#A60F2D',
     width: '100%',
     // height: 100,

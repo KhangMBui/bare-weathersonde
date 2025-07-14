@@ -30,32 +30,27 @@ export default function AuthorsModal({
           <Text style={styles.modalTitle}>Credits & Authors</Text>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.infoGroup}>
-              <Text style={styles.label}>Keshawa Dadallage</Text>
-              <Text style={styles.role}>Hardware Engineer & Mentor</Text>
-              <Text style={styles.value}>
-                Built the WeatherSonde device. Provided technical guidance,
-                project mentorship, and domain expertise throughout the
-                development process.
-              </Text>
+              <View style={styles.authorItem}>
+                <Text style={styles.label}>Keshawa Dadallage</Text>
+                <Text style={styles.role}>Hardware Engineer</Text>
+              </View>
+
+              <View style={[styles.authorItem, styles.authorDivider]}>
+                <Text style={styles.label}>Khang Bui</Text>
+                <Text style={styles.role}>Software Engineer</Text>
+              </View>
+
+              <View style={[styles.authorItem, styles.authorDivider]}>
+                <Text style={styles.label}>Rishabh Goyal</Text>
+                <Text style={styles.role}>Software Engineer</Text>
+              </View>
+
+              <View style={[styles.authorItem, styles.authorDivider]}>
+                <Text style={styles.label}>Lav R. Khot</Text>
+                <Text style={styles.role}>Supervisor</Text>
+              </View>
             </View>
-            <View style={styles.infoGroup}>
-              <Text style={styles.label}>Khang Bui</Text>
-              <Text style={styles.role}>
-                Full Stack Engineer (Frontend Lead)
-              </Text>
-              <Text style={styles.value}>
-                Designed and developed the WeatherSonde app and APIs, integrated
-                the frontend with the backend, and set up the database.
-              </Text>
-            </View>
-            <View style={styles.infoGroup}>
-              <Text style={styles.label}>Rishabh Goyal</Text>
-              <Text style={styles.role}>Backend Engineer</Text>
-              <Text style={styles.value}>
-                Developed the server and API endpoints, handling data from the
-                WeatherSonde sensor.
-              </Text>
-            </View>
+
             <View style={styles.infoGroup}>
               <Text style={styles.label}>Special Thanks</Text>
               <Text style={styles.value}>
@@ -141,14 +136,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: '#fff',
-    // borderRadius: 8,
-    // shadowColor: "#000",
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 2,
-    // padding: 10,
-    // elevation: 2,
-    // width: "100%",
   },
   label: {
     fontSize: 16,
@@ -191,5 +178,14 @@ const styles = StyleSheet.create({
     height: 70,
     resizeMode: 'contain',
     marginTop: 10,
+  },
+  authorItem: {
+    marginBottom: 10,
+  },
+  authorDivider: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eaeaea',
   },
 });

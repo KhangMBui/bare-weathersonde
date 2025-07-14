@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+// import MapView, { UrlTile, PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import { useUnitConversion } from '../hooks/useUnitConversion';
 import { useSettings } from '../contexts/SettingsContext';
 import { useUsbSerial } from '../contexts/UsbDataContext';
@@ -83,7 +84,7 @@ export default function HomeScreen() {
   }, [latitude, longitude]);
 
   const centerMapOnDrone = () => {
-    // console.log('Centering map on drone location...');
+    console.log('Centering map on:', latitude, longitude);
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
@@ -92,8 +93,11 @@ export default function HomeScreen() {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         },
-        500, // duration in ms
+        500,
       );
+    } else {
+      console.warn('Cannot center: Invalid coordinates or map not ready');
+      console.log('Cannot center: Invalid coordinates or map not ready');
     }
   };
 
@@ -124,6 +128,24 @@ export default function HomeScreen() {
     requestLocationPermission();
   }, []);
 
+  // // effect to automatically center the map on the drone's location on mount
+  // useEffect(() => {
+  //   // Force the map to show the region after it's fully loaded
+  //   setTimeout(() => {
+  //     if (mapRef.current) {
+  //       mapRef.current.animateToRegion(
+  //         {
+  //           latitude,
+  //           longitude,
+  //           latitudeDelta: 0.05,
+  //           longitudeDelta: 0.05,
+  //         },
+  //         100,
+  //       );
+  //     }
+  //   }, 1000); // Wait 1 second after component mounts
+  // }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.mainContainer}>
@@ -135,11 +157,18 @@ export default function HomeScreen() {
           initialRegion={
             latitude !== 0 && longitude !== 0 ? mapRegion : undefined
           }
-          showsUserLocation={false} // Don't show device GPS location
-          followsUserLocation={false} // Don't follow device
+          showsUserLocation={false}
+          followsUserLocation={false}
         >
-          {/* Custom marker to act like "user location" */}
-          <Marker coordinate={{ latitude, longitude }}>
+          {/* <UrlTile
+            urlTemplate="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            zIndex={1}
+          /> */}
+          <Marker
+            key={`marker-${Date.now()}`}
+            coordinate={{ latitude, longitude }}
+            zIndex={10}
+          >
             {/* Alternate styles depending on likings: blue dot & drone icon */}
             {/* <View style={styles.fakeUserDotOuter}>
             <View style={styles.fakeUserDotInner} />
@@ -208,7 +237,7 @@ const styles = StyleSheet.create({
   /* Relocate button */
   button: {
     position: 'absolute',
-    top: 40,
+    top: 70,
     right: 0,
     padding: 10,
     borderRadius: 5,
@@ -249,8 +278,9 @@ const styles = StyleSheet.create({
 
   /* Location logo */
   droneLogo: {
-    height: 40,
-    width: 40,
+    height: 80, // Make it much larger for testing
+    width: 80, // Make it much larger for testing
+    tintColor: 'red', // Add a tint to make sure it's not transparent
   },
   locationLogo: {
     height: 25,
