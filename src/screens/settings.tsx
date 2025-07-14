@@ -152,7 +152,7 @@ export default function Settings() {
                 source={require('./../assets/images/icon-author-filled.png')}
                 style={styles.logo}
               />
-              <Text style={styles.applyButtonText}>Authors</Text>
+              <Text style={styles.applyButtonText}>About Us</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.separator} />
